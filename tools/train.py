@@ -3,7 +3,7 @@ import copy
 import os
 import os.path as osp
 import time
-# test1112323456789
+
 import mmcv
 import torch
 from mmcv.runner import init_dist
@@ -18,8 +18,14 @@ from mmseg.utils import collect_env, get_root_logger
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
-    parser.add_argument('config', help='train config file path')
-    parser.add_argument('--work-dir', help='the dir to save logs and models')
+    parser.add_argument(
+        'config',
+        default='../configs/deeplabv3/deeplabv3_r50-d8_512x512_20k_voc12aug.py',
+        help='train config file path')
+    parser.add_argument(
+        '--work-dir',
+        default='/home/feng/logs',
+        help='the dir to save logs and models')
     parser.add_argument(
         '--load-from', help='the checkpoint file to load weights from')
     parser.add_argument(
@@ -32,6 +38,7 @@ def parse_args():
     group_gpus.add_argument(
         '--gpus',
         type=int,
+        default=1,
         help='number of gpus to use '
         '(only applicable to non-distributed training)')
     group_gpus.add_argument(
