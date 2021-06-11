@@ -24,10 +24,12 @@ def parse_args():
         help='train config file path')
     parser.add_argument(
         '--work-dir',
-        default='/home/feng/logs',
+        default='/home/feng/work_mmseg/logs',
         help='the dir to save logs and models')
     parser.add_argument(
-        '--load-from', help='the checkpoint file to load weights from')
+        '--load-from',
+        default='/home/feng/work_mmseg/checkpoints/deeplabv3_r50-d8_512x512_20k_voc12aug_20200617_010906-596905ef.pth',
+        help='the checkpoint file to load weights from')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(
