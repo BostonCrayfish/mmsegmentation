@@ -19,7 +19,7 @@ from mmseg.utils import collect_env, get_root_logger
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
     parser.add_argument(
-        'config',
+        '--config',
         default='../configs/deeplabv3/my_r50-d8_512_20k_voc07.py',
         help='train config file path')
     parser.add_argument(
