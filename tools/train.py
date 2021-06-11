@@ -20,7 +20,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
     parser.add_argument(
         'config',
-        default='../configs/deeplabv3/deeplabv3_r50-d8_512x512_20k_voc12aug.py',
+        default='../configs/deeplabv3/my_r50-d8_512_20k_voc07.py',
         help='train config file path')
     parser.add_argument(
         '--work-dir',
@@ -158,6 +158,8 @@ def main():
     model.CLASSES = datasets[0].CLASSES
     # passing checkpoint meta for saving best checkpoint
     meta.update(cfg.checkpoint_config.meta)
+    print('start training')
+    time.sleep(10)
     train_segmentor(
         model,
         datasets,
