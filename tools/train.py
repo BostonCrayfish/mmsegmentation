@@ -16,6 +16,9 @@ from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# import torch.distributed as dist
+#
+# dist.init_process_group('gloo', init_method='file:///temp/somefile', rank=0, world_size=1)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
@@ -26,10 +29,11 @@ def parse_args():
     parser.add_argument(
         '--work-dir',
         default='/home/feng/work_mmseg/logs',
+        # default='/stor2/wangfeng/evaluation/log-0',
         help='the dir to save logs and models')
     parser.add_argument(
         '--load-from',
-        default='/home/feng/work_mmseg/checkpoints/deeplabv3_r50-d8_512x512_20k_voc12aug_20200617_010906-596905ef.pth',
+        # default='/home/feng/work_mmseg/checkpoints/deeplabv3_r50-d8_512x512_20k_voc12aug_20200617_010906-596905ef.pth',
         help='the checkpoint file to load weights from')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
@@ -41,7 +45,7 @@ def parse_args():
     group_gpus.add_argument(
         '--gpus',
         type=int,
-        default=4,
+        default=1,
         help='number of gpus to use '
         '(only applicable to non-distributed training)')
     group_gpus.add_argument(
@@ -162,6 +166,7 @@ def main():
     # passing checkpoint meta for saving best checkpoint
     meta.update(cfg.checkpoint_config.meta)
     # print('start training segmentor')
+    # print(args.no_validate)
     # time.sleep(10)
     train_segmentor(
         model,

@@ -1,7 +1,6 @@
 # dataset settings
 dataset_type = 'PascalVOCDataset'
-# data_root = '/export/ccvl11b/cwei/data/VOC2007'
-data_root = '/stor2/wangfeng/VOC2007'
+data_root = '/export/ccvl11b/cwei/data/VOC2012'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (512, 512)
@@ -40,7 +39,7 @@ data = dict(
         data_root=data_root,
         img_dir='JPEGImages',
         ann_dir='SegmentationClass',
-        split='ImageSets/Segmentation/train.txt',
+        split='ImageSets/Segmentation/train_aug.txt',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
