@@ -24,7 +24,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
     parser.add_argument(
         'config',
-        default='../configs/deeplabv3/my_r50-d8_512_20k_voc07.py',
+        default='../configs/deeplabv3/my_r50v1c_voc12aug.py',
         help='train config file path')
     parser.add_argument(
         '--work-dir',
