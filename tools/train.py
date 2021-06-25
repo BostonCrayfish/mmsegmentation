@@ -168,6 +168,10 @@ def main():
     # print('start training segmentor')
     # print(args.no_validate)
     # time.sleep(10)
+
+    print(model)
+    time.sleep(60)
+
     train_segmentor(
         model,
         datasets,
