@@ -176,10 +176,11 @@ def main():
         print(type(en), en.shape)
     # print('shape of encoder output: {}'.format(encoder_output.shape()))
     head_output = model.decode_head(encoder_output)
-    print(type(head_output))
-    print('shape of head output:{}'.format(head_output.shape()))
+    # print(type(head_output))
+    print('shape of head output:{}'.format(head_output.shape))
     # print(type(model.decode_head))
-    time.sleep(60)
+    raise
+    # time.sleep(60)
 
     #########################################
 
