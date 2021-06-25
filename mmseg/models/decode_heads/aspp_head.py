@@ -103,5 +103,5 @@ class ASPPHead(BaseDecodeHead):
         aspp_outs.extend(self.aspp_modules(x))
         aspp_outs = torch.cat(aspp_outs, dim=1)
         output = self.bottleneck(aspp_outs)
-        # output = self.cls_seg(output)
+        output = self.cls_seg(output)
         return output
