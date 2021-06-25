@@ -179,6 +179,11 @@ def main():
     # print(type(head_output))
     print('shape of head output:{}'.format(head_output.shape))
     # print(type(model.decode_head))
+
+    new_model = torch.nn.Sequential(model.backbone, model.decode_head)
+    print(new_model)
+
+
     raise
     # time.sleep(60)
 
