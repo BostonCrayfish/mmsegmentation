@@ -171,8 +171,9 @@ def main():
     ########################### it is my test
     rand_input = torch.randn((4, 3, 512, 512))
     encoder_output = model.backbone(rand_input)
-    print(len(encoder_output))
-    print(type(encoder_output[0]))
+    # print(len(encoder_output))
+    for en in encoder_output:
+        print(type(en), en.shape)
     print('shape of encoder output: {}'.format(encoder_output.shape()))
     head_output = model.decode_head(encoder_output)
     print('shape of head output:{}'.format(head_output.shape()))
