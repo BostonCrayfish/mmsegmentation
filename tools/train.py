@@ -169,7 +169,7 @@ def main():
     # print(args.no_validate)
     # time.sleep(10)
 
-    print(type(model))
+    print(type(model.decode_head))
     time.sleep(60)
 
     train_segmentor(
