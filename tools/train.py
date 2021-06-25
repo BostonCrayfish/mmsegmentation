@@ -181,8 +181,8 @@ def main():
     # print(type(model.decode_head))
 
     new_model = torch.nn.Sequential(model.backbone, model.decode_head)
-    print('shape of output:{}'.format(new_model(rand_input)))
-    print(new_model.ResNet)
+    print('shape of output:{}'.format(new_model(rand_input).shape))
+    print(new_model[0])
 
 
     raise
