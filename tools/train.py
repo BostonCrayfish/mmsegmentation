@@ -169,7 +169,7 @@ def main():
     # print(args.no_validate)
     # time.sleep(10)
     ########################### it is my test
-    rand_input = torch.randn((4, 512, 512, 3))
+    rand_input = torch.randn((4, 3, 512, 512))
     encoder_output = model.backbone(rand_input)
     print('shape of encoder output: {}'.format(encoder_output.shape))
     head_output = model.decode_head(encoder_output)
