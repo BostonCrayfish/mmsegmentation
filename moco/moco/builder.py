@@ -1,14 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import torch
 import torch.nn as nn
-
+from mmseg.models import build_segmentor
 
 class MoCo(nn.Module):
     """
     Build a MoCo model with: a query encoder, a key encoder, and a queue
     https://arxiv.org/abs/1911.05722
     """
-    def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=False):
+    def __init__(self, cfg, dim=128, K=65536, m=0.999, T=0.07, mlp=False):
         """
         dim: feature dimension (default: 128)
         K: queue size; number of negative keys (default: 65536)
@@ -23,13 +23,22 @@ class MoCo(nn.Module):
 
         # create the encoders
         # num_classes is the output fc dimension
-        self.encoder_q = base_encoder(num_classes=dim)
-        self.encoder_k = base_encoder(num_classes=dim)
+        # self.encoder_q = base_encoder(num_classes=dim)
+        # self.encoder_k = base_encoder(num_classes=dim)
 
-        if mlp:  # hack: brute-force replacement
-            dim_mlp = self.encoder_q.fc.weight.shape[1]
-            self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
-            self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
+        self.encoder_q = build_segmentor(
+            cfg.model,
+            train_cfg=cfg.get('train_cfg'),
+            test_cfg=cfg.get('test_cfg'))
+        self.encoder_k = build_segmentor(
+            cfg.model,
+            train_cfg=cfg.get('train_cfg'),
+            test_cfg=cfg.get('test_cfg'))
+
+        # if mlp:  # hack: brute-force replacement
+        #     dim_mlp = self.encoder_q.fc.weight.shape[1]
+        #     self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
+        #     self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
 
         for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)  # initialize
@@ -112,7 +121,7 @@ class MoCo(nn.Module):
 
         return x_gather[idx_this]
 
-    def forward(self, im_q, im_k):
+    def forward(self, im_q, im_k, mask_q, mask_k):
         """
         Input:
             im_q: a batch of query images
@@ -123,6 +132,7 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
+        q = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T
         q = nn.functional.normalize(q, dim=1)
 
         # compute key features
@@ -133,6 +143,7 @@ class MoCo(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
             k = self.encoder_k(im_k)  # keys: NxC
+            k = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
             k = nn.functional.normalize(k, dim=1)
 
             # undo shuffle
