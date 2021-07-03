@@ -132,8 +132,10 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        q = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T
-        q = nn.functional.normalize(q, dim=1)
+        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
+        q_pos = nn.functional.normalize(q_pos, dim=1)
+        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
+        q_neg = nn.functional.normalize(q_neg, dim=1)
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -143,32 +145,43 @@ class MoCo(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
             k = self.encoder_k(im_k)  # keys: NxC
-            k = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
-            k = nn.functional.normalize(k, dim=1)
-
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
+
+            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
+            k_pos = nn.functional.normalize(k_pos, dim=1)
+            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
+            k_neg = nn.functional.normalize(k_neg, dim=1)
 
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
-        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
+        l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
         # negative logits: NxK
-        l_neg = torch.einsum('nc,ck->nk', [q, self.queue.clone().detach()])
+        l_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
+
+        # negative logits for backgrounds: Nx2
+        l_neg_bg = torch.cat(
+            [torch.einsum('nc,nc->n', [q_pos, q_neg]).unsqueeze(-1),
+             torch.einsum('nc,nc->n', [q_pos, k_neg]).unsqueeze(-1)],
+            dim=1)
 
         # logits: Nx(1+K)
         logits = torch.cat([l_pos, l_neg], dim=1)
+        # logits for backgrounds: Nx3
+        logits_bg = torch.cat([l_neg, l_neg_bg], dim=1)
 
         # apply temperature
         logits /= self.T
+        logits_bg /= self.T
 
         # labels: positive key indicators
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
 
         # dequeue and enqueue
-        self._dequeue_and_enqueue(k)
+        self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
 
-        return logits, labels
+        return logits, logits_bg, labels
 
 
 # utils
