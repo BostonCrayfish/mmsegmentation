@@ -247,23 +247,43 @@ def main_worker(gpu, ngpus_per_node, args):
     train_dataset = datasets.ImageFolder(
         traindir,
         moco_loader.TwoCropsTransform(transforms.Compose(augmentation)))
+    train_dataset_bg = datasets.ImageFolder(
+        traindir,
+        transforms.Compose(augmentation))
 
+    # load training data in three processes:
+    # 1. train_*: foreground image
+    # 2. train_*_bg0: background image 0
+    # 3. train_*_bg1: background image 1
+    # This process is convenient to load data for epochs
     if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, seed=0)
+        train_sampler_bg0 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=1024)
+        train_sampler_bg1 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=2048)
     else:
         train_sampler = None
+        train_sampler_bg0 = None
+        train_sampler_bg1 = None
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
+    train_loader_bg0 = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler_bg0 is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg0, drop_last=True)
+    train_loader_bg1 = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+            train_sampler_bg0.set_epoch(epoch)
+            train_sampler_bg1.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args)
+        train([train_loader, train_loader_bg0, train_loader_bg1], model, criterion, optimizer, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -275,12 +295,13 @@ def main_worker(gpu, ngpus_per_node, args):
             }, is_best=False, filename='checkpoint_{:04d}.pth.tar'.format(epoch))
 
 
-def train(train_loader, model, criterion, optimizer, epoch, args):
+def train(train_loader_list, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
+    train_loader, train_loader_bg0, train_loader_bg1 = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
         [batch_time, data_time, losses, top1, top5],
@@ -290,21 +311,34 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    for i, (images, _), (bg0, _), (bg1, _) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
         # measure data loading time
         data_time.update(time.time() - end)
+
+        # generate mask by RandomErasing
+        msk_gen = transforms.RandomErasing(p=1., scale=(0.02, 0.33), ratio=(0.3, 3.3), value=1.)
+        mask_q = msk_gen(torch.zeros(1, 224, 224))[0]
+        mask_k = msk_gen(torch.zeros(1, 224, 224))[0]
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            bg0 = bg0.cuda(args.gpu, non_blocking=True)
+            bg1 = bg1.cuda(args.gpu, non_blocking=True)
+            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
+            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
+
+        # generate patched images
+        image_q = torch.mul(images[0], mask_q) + torch.mul(bg0, (1 - mask_q))
+        image_k = torch.mul(images[1], mask_k) + torch.mul(bg1, (1 - mask_k))
 
         # compute output
-        output, target = model(im_q=images[0], im_k=images[1])
-        loss = criterion(output, target)
+        output_bank, output_loc, target = model(image_q, image_k, mask_q[::16, ::16], mask_k[::16, ::16])
+        loss = 0.8 * criterion(output_bank, target) + 0.2 * criterion(output_loc, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        acc1, acc5 = accuracy(output_bank, target, topk=(1, 5))
         losses.update(loss.item(), images[0].size(0))
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
