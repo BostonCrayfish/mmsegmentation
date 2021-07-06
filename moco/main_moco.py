@@ -24,8 +24,8 @@ import torchvision.models as models
 
 from mmcv.utils import Config
 
-from .moco import loader as moco_loader
-from .moco import builder as moco_builder
+from moco.moco import loader as moco_loader
+from moco.moco import builder as moco_builder
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
