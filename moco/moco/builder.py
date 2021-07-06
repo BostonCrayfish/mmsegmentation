@@ -131,7 +131,7 @@ class MoCo(nn.Module):
         """
 
         # compute query features
-        q = self.encoder_q.forward_dummy(im_q)  # queries: NxC
+        q = self.encoder_q.forward_seg(im_q, None)  # queries: NxC
         print(q.shape, mask_q.shape)
         import time
         time.sleep(10)
@@ -147,7 +147,7 @@ class MoCo(nn.Module):
             # shuffle for making use of BN
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
-            k = self.encoder_k.forward_dummy(im_k)  # keys: NxC
+            k = self.encoder_k.forward_seg(im_k)  # keys: NxC
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
