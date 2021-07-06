@@ -273,10 +273,10 @@ def main_worker(gpu, ngpus_per_node, args):
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
     train_loader_bg0 = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler_bg0 is None),
+        train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg0 is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg0, drop_last=True)
     train_loader_bg1 = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
+        train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
 
     for epoch in range(args.start_epoch, args.epochs):
