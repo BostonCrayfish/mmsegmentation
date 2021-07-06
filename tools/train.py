@@ -185,7 +185,7 @@ def main():
     print(model.decode_head)
 
 
-    raise
+    # raise
     # time.sleep(60)
 
     #########################################
