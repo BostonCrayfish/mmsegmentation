@@ -131,7 +131,7 @@ class MoCo(nn.Module):
         """
 
         # compute query features
-        q = self.encoder_q.forward_seg(im_q, None)  # queries: NxC
+        q = self.encoder_q.forward_seg(im_q)  # queries: NxC
         print(q.shape, mask_q.shape)
         import time
         time.sleep(10)
