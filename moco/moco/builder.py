@@ -29,11 +29,11 @@ class MoCo(nn.Module):
         self.encoder_q = build_segmentor(
             cfg.model,
             train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg'))
+            test_cfg=cfg.get('test_cfg')).forward_seg
         self.encoder_k = build_segmentor(
             cfg.model,
             train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg'))
+            test_cfg=cfg.get('test_cfg')).forward_seg
 
         # if mlp:  # hack: brute-force replacement
         #     dim_mlp = self.encoder_q.fc.weight.shape[1]
@@ -131,7 +131,7 @@ class MoCo(nn.Module):
         """
 
         # compute query features
-        q = self.encoder_q.forward_seg(im_q)  # queries: NxC
+        q = self.encoder_q(im_q)  # queries: NxC
         # print(q.shape, mask_q.shape)
         # import time
         # time.sleep(10)
@@ -147,7 +147,7 @@ class MoCo(nn.Module):
             # shuffle for making use of BN
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
-            k = self.encoder_k.forward_seg(im_k)  # keys: NxC
+            k = self.encoder_k(im_k)  # keys: NxC
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
