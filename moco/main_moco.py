@@ -337,7 +337,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_k = torch.mul(images[1], mask_k) + torch.mul(bg1, (1 - mask_k))
 
         # compute output
-        output_bank, output_loc, target = model(image_q, image_k, mask_q[::16, ::16], mask_k[::16, ::16])
+        output_bank, output_loc, target = model(image_q, image_k, mask_q[::8, ::8], mask_k[::8, ::8])
         loss = 0.8 * criterion(output_bank, target) + 0.2 * criterion(output_loc, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
