@@ -29,11 +29,11 @@ class MoCo(nn.Module):
         self.encoder_q = build_segmentor(
             cfg.model,
             train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg')).forward_seg
+            test_cfg=cfg.get('test_cfg'))
         self.encoder_k = build_segmentor(
             cfg.model,
             train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg')).forward_seg
+            test_cfg=cfg.get('test_cfg'))
 
         # if mlp:  # hack: brute-force replacement
         #     dim_mlp = self.encoder_q.fc.weight.shape[1]

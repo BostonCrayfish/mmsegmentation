@@ -133,7 +133,7 @@ class EncoderDecoder(BaseSegmentor):
 
         return seg_logit
 
-    def forward_seg(self, img):
+    def forward(self, img):
         x = self.extract_feat(img)
         return self._decode_head_forward_test(x, None)
 
