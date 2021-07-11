@@ -1,3 +1,5 @@
+# original version of aspp
+
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
@@ -89,21 +91,6 @@ class ASPPHead(BaseDecodeHead):
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
-        self.contrast_conv = nn.Sequential(
-            ConvModule(
-                self.channels,
-                self.channels,
-                1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg),
-            ConvModule(
-                self.channels,
-                128,
-                1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg))
 
     def forward(self, inputs):
         """Forward function."""
@@ -118,6 +105,5 @@ class ASPPHead(BaseDecodeHead):
         aspp_outs.extend(self.aspp_modules(x))
         aspp_outs = torch.cat(aspp_outs, dim=1)
         output = self.bottleneck(aspp_outs)
-        output = self.contrast_conv(output)
-        # output = self.cls_seg(output)
+        output = self.cls_seg(output)
         return output
