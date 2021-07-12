@@ -341,7 +341,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        output_bank, output_loc, target = model(image_q, image_k, mask_q[::16, ::16], mask_k[::16, ::16])
+        output_bank, output_loc, target = model(image_q, image_k, mask_q[:, ::16, ::16], mask_k[:, ::16, ::16])
         loss = criterion(output_bank, target) + 0. * criterion(output_loc, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
