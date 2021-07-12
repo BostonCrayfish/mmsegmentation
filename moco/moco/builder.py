@@ -132,9 +132,9 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        print(q.shape, mask_q.shape)
-        import time
-        time.sleep(10)
+        # print(q.shape, mask_q.shape)
+        # import time
+        # time.sleep(10)
 
         # mask_q dim=(1, 2)
         q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
