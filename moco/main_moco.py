@@ -321,8 +321,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # generate mask by RandomErasing
         msk_gen = transforms.RandomErasing(p=1., scale=(0.02, 0.33), ratio=(0.3, 3.3), value=1.)
-        mask_q = msk_gen(torch.zeros(1, 224, 224))[0]
-        mask_k = msk_gen(torch.zeros(1, 224, 224))[0]
+        mask_q = msk_gen(torch.zeros(images[0].size(0), 224, 224))  # batch size
+        mask_k = msk_gen(torch.zeros(images[0].size(0), 224, 224))
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
@@ -333,12 +333,16 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        image_q = torch.mul(images[0], mask_q) + torch.mul(bg0, (1 - mask_q))
-        image_k = torch.mul(images[1], mask_k) + torch.mul(bg1, (1 - mask_k))
+        print(images[0].shape, images[0].size[0], bg0.shape)
+        time.sleep(10)
+        image_q = images[0].permute(1, 0, 2, 3) * mask_q + bg0.permute(1, 0, 2, 3) * (1 - mask_q)
+        image_q = image_q.permute(1, 0, 2, 3)
+        image_k = images[1].permute(1, 0, 2, 3) * mask_k + bg1.permute(1, 0, 2, 3) * (1 - mask_k)
+        image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        output_bank, output_loc, target = model(image_q, image_k, mask_q[::8, ::8], mask_k[::8, ::8])
-        loss = criterion(output_bank, target) + 0.33 * criterion(output_loc, target)
+        output_bank, output_loc, target = model(image_q, image_k, mask_q[::16, ::16], mask_k[::16, ::16])
+        loss = criterion(output_bank, target) + 0. * criterion(output_loc, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss

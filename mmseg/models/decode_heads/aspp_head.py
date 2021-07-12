@@ -95,15 +95,16 @@ class ASPPHead(BaseDecodeHead):
                 self.channels,
                 1,
                 conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
+                # norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg),
+            # mind the act layer & BN
             ConvModule(
                 self.channels,
                 128,
                 1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg))
+                conv_cfg=self.conv_cfg))
+                # norm_cfg=self.norm_cfg,
+                # act_cfg=self.act_cfg))
 
     def forward(self, inputs):
         """Forward function."""
