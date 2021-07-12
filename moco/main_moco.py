@@ -333,7 +333,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        print(images[0].shape, images[0].size[0], bg0.shape)
+        print(images[0].shape, images[0].size(0), bg0.shape)
         time.sleep(10)
         image_q = images[0].permute(1, 0, 2, 3) * mask_q + bg0.permute(1, 0, 2, 3) * (1 - mask_q)
         image_q = image_q.permute(1, 0, 2, 3)
