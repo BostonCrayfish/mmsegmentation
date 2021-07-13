@@ -137,7 +137,7 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    cfg = Config.fromfile('../configs/deeplabv3/my_r50_voc12aug.py')
+    cfg = Config.fromfile('/home/feng/mmsegmentation/configs/deeplabv3/my_r50_voc12aug.py')
     args.gpu = gpu
 
     # suppress printing if not master
