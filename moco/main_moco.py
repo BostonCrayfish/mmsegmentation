@@ -302,13 +302,14 @@ def main_worker(gpu, ngpus_per_node, args):
 def train(train_loader_list, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
-    losses = AverageMeter('Loss', ':.4e')
+    loss_m = AverageMeter('Loss_moco', ':.4e')
+    loss_s = AverageMeter('Loss_seg', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
     train_loader, train_loader_bg0, train_loader_bg1 = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, top1, top5],
+        [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -342,12 +343,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # compute output
         output_bank, output_loc, target = model(image_q, image_k, mask_q[:, ::16, ::16], mask_k[:, ::16, ::16])
-        loss = criterion(output_bank, target) + 0. * criterion(output_loc, target)
+        loss_moco = criterion(output_bank, target)
+        loss_seg = criterion(output_loc, target)
+        loss = loss_moco + 0.33 * loss_seg
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output_bank, target, topk=(1, 5))
-        losses.update(loss.item(), images[0].size(0))
+        loss_m.update(loss_moco.item(), images[0].size(0))
+        loss_s.update(loss_seg.item(), images[0].size(0))
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
 
