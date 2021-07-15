@@ -3,8 +3,8 @@ import torch.nn as nn
 from mmcv.cnn import ConvModule
 
 from mmseg.ops import resize
-from ..builder import HEADS
-from .decode_head import BaseDecodeHead
+from mmseg.models.builder import HEADS
+from mmseg.models.decode_heads.decode_head import BaseDecodeHead
 
 
 class ASPPModule(nn.ModuleList):
