@@ -24,7 +24,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
     parser.add_argument(
         'config',
-        default='../configs/deeplabv3/my_r50_voc12aug.py',
+        default='/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py',
         help='train config file path')
     parser.add_argument(
         '--work-dir',
@@ -45,7 +45,7 @@ def parse_args():
     group_gpus.add_argument(
         '--gpus',
         type=int,
-        default=2,
+        default=4,
         help='number of gpus to use '
         '(only applicable to non-distributed training)')
     group_gpus.add_argument(
@@ -165,30 +165,6 @@ def main():
     model.CLASSES = datasets[0].CLASSES
     # passing checkpoint meta for saving best checkpoint
     meta.update(cfg.checkpoint_config.meta)
-    # print('start training segmentor')
-    # print(args.no_validate)
-    # time.sleep(10)
-    ########################### it is my test
-    rand_input = torch.randn((4, 3, 512, 512))
-    # encoder_output = model.backbone(rand_input)
-    # print(len(encoder_output))
-    # for en in encoder_output:
-    #     print(type(en), en.shape)
-    # print('shape of encoder output: {}'.format(encoder_output.shape()))
-    # head_output = model.decode_head(encoder_output)
-    # print(type(head_output))
-    # print('shape of head output:{}'.format(head_output.shape))
-    # print(type(model.decode_head))
-
-    new_model = torch.nn.Sequential(model.backbone, model.decode_head)
-    # print('shape of output:{}'.format(new_model(rand_input).shape))
-    print(model.decode_head)
-
-
-    # raise
-    # time.sleep(60)
-
-    #########################################
 
     train_segmentor(
         model,
