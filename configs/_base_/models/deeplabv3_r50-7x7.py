@@ -3,7 +3,7 @@
 norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
     type='EncoderDecoder',
-    pretrained='/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth',
+    pretrained='/home/feng/work_mmseg/checkpoints/seg_moco_r50_d16_20ep.pth',
     backbone=dict(
         type='ResNet',
         depth=50,
