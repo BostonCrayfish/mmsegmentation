@@ -4,7 +4,9 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 from mmcv.runner import auto_fp16, force_fp32
+from mmcv.runner import load_checkpoint
 
+from mmseg.utils import get_root_logger
 from mmseg.core import build_pixel_sampler
 from mmseg.ops import resize
 from ..builder import build_loss
@@ -130,9 +132,14 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
             assert isinstance(in_index, int)
             self.in_channels = in_channels
 
-    def init_weights(self):
-        """Initialize weights of classification layer."""
-        normal_init(self.conv_seg, mean=0, std=0.01)
+    def init_weights(self, pretrained=None):
+        """Initialize weights of the whole decoder head."""
+        # normal_init(self.conv_seg, mean=0, std=0.01)
+        if isinstance(pretrained, str):
+            logger = get_root_logger()
+            load_checkpoint(self, pretrained, strict=False, logger=logger)
+        else:
+            normal_init(self.conv_seg, mean=0, std=0.01)
 
     def _transform_inputs(self, inputs):
         """Transform inputs for decoder.
