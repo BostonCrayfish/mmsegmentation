@@ -137,7 +137,7 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    cfg = Config.fromfile('/home/feng/mmsegmentation/configs/deeplabv3/deeplabv3_r50_voc12_d16.py')
+    cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_cofig/deeplabv3_r50_voc12_d16.py')
     args.gpu = gpu
 
     # suppress printing if not master
@@ -316,9 +316,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, ((images, _), (bg0, _), (bg1, _)) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
+    for i, ((images, l_fore), (bg0, l_bg0), (bg1, l_bg1)) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
         # measure data loading time
         data_time.update(time.time() - end)
+
+        # check if loading the same label among foreground and two backgrounds
+        print(l_fore)
+        time.sleep(10)
+        raise
 
         # generate mask by RandomErasing
         msk_gen = transforms.RandomErasing(p=1., scale=(0.02, 0.33), ratio=(0.3, 3.3), value=1.)
