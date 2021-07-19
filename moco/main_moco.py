@@ -27,6 +27,8 @@ from mmcv.utils import Config
 from moco.moco import loader as moco_loader
 from moco.moco import builder as moco_builder
 
+from torch.utils.tensorboard import SummaryWriter
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -356,6 +358,11 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
 
+        writer.add_scalar('loss_moco', loss_moco.item())
+        writer.add_scalar('loss_seg', loss_seg.item())
+        writer.add_scalar('acc1', acc1[0])
+        writer.add_scalar('acc5', acc5[0])
+
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
@@ -446,4 +453,5 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
+    writer = SummaryWriter('./log')
     main()
