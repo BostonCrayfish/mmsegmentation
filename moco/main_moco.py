@@ -314,6 +314,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         len(train_loader),
         [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
+    writer = SummaryWriter('./log')
 
     # switch to train mode
     model.train()
@@ -453,5 +454,4 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
-    writer = SummaryWriter('./log')
     main()
