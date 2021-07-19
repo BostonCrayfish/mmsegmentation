@@ -346,7 +346,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         output_bank, output_loc, target = model(image_q, image_k, mask_q[:, ::16, ::16], mask_k[:, ::16, ::16])
         loss_moco = criterion(output_bank, target)
         loss_seg = criterion(output_loc, target)
-        loss = loss_moco + 0.33 * loss_seg
+        loss = loss_moco
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
