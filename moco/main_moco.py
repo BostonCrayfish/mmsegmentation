@@ -46,7 +46,7 @@ parser.add_argument('--epochs', default=200, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=16, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -321,7 +321,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         # check if loading the same label among foreground and two backgrounds
-        print(l_fore)
+        print(l_fore, l_bg0, l_bg1)
         time.sleep(10)
         raise
 
