@@ -145,12 +145,11 @@ def main():
 
 def main_worker(gpu, ngpus_per_node, args):
     if '/home/feng' in os.getcwd():
-        cfg_path = '/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py'
+        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py')
     elif '/home/cwei' in os.getcwd():
-        cfg_path = '/home/cwei/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py'
+        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py')
     else:
         raise ValueError('unknown path for configuration')
-    cfg = Config.fromfile(cfg_path)
     args.gpu = gpu
 
     # suppress printing if not master
