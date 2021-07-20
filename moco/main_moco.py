@@ -145,9 +145,9 @@ def main():
 
 def main_worker(gpu, ngpus_per_node, args):
     if '/home/feng' in os.getcwd():
-        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py')
+        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
     elif '/home/cwei' in os.getcwd():
-        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py')
+        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
     else:
         raise ValueError('unknown path for configuration')
     args.gpu = gpu

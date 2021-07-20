@@ -4,17 +4,17 @@ norm_cfg = dict(type='BN', requires_grad=True)
 
 # decide data directory by home name
 # please remove these lines and directly set data_root for your training
-import os
-if '/home/feng' in os.getcwd():
-    pretrain_path = '/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
-elif '/home/cwei' in os.getcwd():
-    pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
-else:
-    raise ValueError('unknown data directory')
+# import os
+# if '/home/feng' in os.getcwd():
+#     pretrain_path = '/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
+# elif '/home/cwei' in os.getcwd():
+#     pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
+# else:
+#     raise ValueError('unknown data directory')
 
 model = dict(
     type='EncoderDecoder',
-    pretrained='/home/cwei/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth',
+    pretrained='/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth',
     backbone=dict(
         type='ResNet',
         depth=50,
