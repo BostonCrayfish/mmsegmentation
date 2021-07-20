@@ -11,9 +11,10 @@ elif '/home/cwei' in os.getcwd():
     pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
 else:
     raise ValueError('unknown data directory')
+
 model = dict(
     type='EncoderDecoder',
-    pretrained=pretrain_path,
+    pretrained='/home/cwei/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth',
     backbone=dict(
         type='ResNet',
         depth=50,
