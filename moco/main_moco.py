@@ -33,7 +33,6 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
-
 writer = SummaryWriter('./log')
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -145,7 +144,13 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py')
+    if '/home/feng' in os.getcwd():
+        cfg_path = '/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py'
+    elif '/home/cwei' in os.getcwd():
+        cfg_path = '/home/cwei/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py'
+    else:
+        raise ValueError('unknown path for configuration')
+    cfg = Config.fromfile(cfg_path)
     args.gpu = gpu
 
     # suppress printing if not master
