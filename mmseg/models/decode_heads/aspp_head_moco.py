@@ -89,24 +89,28 @@ class ASPPHead(BaseDecodeHead):
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
-        self.contrast_conv = nn.Sequential(
-            ConvModule(
-                self.channels,
-                self.channels,
-                1,
-                conv_cfg=self.conv_cfg,
-                # norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg),
-            # mind the act layer & BN
-            ConvModule(
-                self.channels,
-                128,
-                1,
-                conv_cfg=self.conv_cfg))
+        self.moco_mlp = nn.Sequential(
+            nn.Linear(self.channels, self.channels),
+            nn.ReLU(),
+            nn.Linear(self.channels, 128))
+        # self.contrast_mlp = nn.Sequential(
+        #     ConvModule(
+        #         self.channels,
+        #         self.channels,
+        #         1,
+        #         conv_cfg=self.conv_cfg,
+        #         # norm_cfg=self.norm_cfg,
+        #         act_cfg=self.act_cfg),
+        #     # mind the act layer & BN
+        #     ConvModule(
+        #         self.channels,
+        #         128,
+        #         1,
+        #         conv_cfg=self.conv_cfg))
                 # norm_cfg=self.norm_cfg,
                 # act_cfg=self.act_cfg))
 
-    def forward(self, inputs):
+    def forward(self, inputs, mask):
         """Forward function."""
         x = self._transform_inputs(inputs)
         aspp_outs = [
@@ -119,6 +123,12 @@ class ASPPHead(BaseDecodeHead):
         aspp_outs.extend(self.aspp_modules(x))
         aspp_outs = torch.cat(aspp_outs, dim=1)
         output = self.bottleneck(aspp_outs)
-        output = self.contrast_conv(output)
-        # output = self.cls_seg(output)
-        return output
+
+        x_fore = (torch.mul(output.permute(1, 0, 2, 3), mask).sum(dim=(2, 3)) / mask.sum(dim=(1, 2))).T
+        x_fore = nn.functional.normalize(x_fore, dim=1)
+        x_back = (torch.mul(output.permute(1, 0, 2, 3), (1 - mask)).sum(dim=(2, 3)) / (1 - mask).sum(dim=(1, 2))).T
+        x_back = nn.functional.normalize(x_back, dim=1)
+
+        output_fore = self.moco_mlp(x_fore)
+        output_back = self.moco_mlp(x_back)
+        return [output_fore, output_back]
