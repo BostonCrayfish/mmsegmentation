@@ -1,6 +1,15 @@
 # dataset settings
 dataset_type = 'PascalVOCDataset'
-data_root = '/export/ccvl11b/cwei/data/VOC2012'
+
+# decide data directory by home name
+# please remove these lines and directly set data_root for your training
+import os
+if '/home/feng' in os.getcwd():
+    data_root = '/export/ccvl11b/cwei/data/VOC2012'
+elif '/home/cwei' in os.getcwd():
+    data_root = '/home/cwei/feng/data/VOC2012'
+else:
+    raise ValueError('unknown data directory')
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (512, 512)

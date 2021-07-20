@@ -33,10 +33,14 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
+
+writer = SummaryWriter('./log')
+
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR',
                     default='/export/ccvl11b/cwei/data/ImageNet',
                     help='path to dataset')
+parser.add_argument('--device-name', default='ccvl11', help='device name')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
                     choices=model_names,
                     help='model architecture: ' +
@@ -45,6 +49,8 @@ parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
 parser.add_argument('-j', '--workers', default=32, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=200, type=int, metavar='N',
+                    help='number of total epochs to run')
+parser.add_argument('--num-images', default=1281167, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -224,7 +230,17 @@ def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
 
     # Data loading code
-    traindir = os.path.join(args.data, 'train')
+    # set different paths to data
+    # for ease running on different devices
+    if args.device_name == 'ccvl11':
+        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
+    elif args.device_name == 'ccvl8':
+        data_dir = '/home/cwei/feng/data/ImageNet'
+    elif args.device_name == None and args.data:
+        data_dir = args.data
+    else:
+        raise ValueError("missing data directory or unknown device")
+    traindir = os.path.join(data_dir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     if args.aug_plus:
@@ -314,7 +330,6 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         len(train_loader),
         [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
-    writer = SummaryWriter('./log')
 
     # switch to train mode
     model.train()
@@ -359,10 +374,11 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
 
-        writer.add_scalar('loss_moco', loss_moco.item())
-        writer.add_scalar('loss_seg', loss_seg.item())
-        writer.add_scalar('acc1', acc1[0])
-        writer.add_scalar('acc5', acc5[0])
+        global_step = i + epoch * (args.num_images // args.batch_size)
+        writer.add_scalar('loss_moco', loss_moco.item(), global_step)
+        writer.add_scalar('loss_seg', loss_seg.item(), global_step)
+        writer.add_scalar('acc1', acc1[0], global_step)
+        writer.add_scalar('acc5', acc5[0], global_step)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

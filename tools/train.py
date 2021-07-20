@@ -28,8 +28,6 @@ def parse_args():
         help='train config file path')
     parser.add_argument(
         '--work-dir',
-        default='/home/feng/work_mmseg/logs',
-        # default='/stor2/wangfeng/evaluation/log-0',
         help='the dir to save logs and models')
     parser.add_argument(
         '--load-from',
@@ -44,7 +42,6 @@ def parse_args():
     group_gpus.add_argument(
         '--gpus',
         type=int,
-        default=4,
         help='number of gpus to use '
         '(only applicable to non-distributed training)')
     group_gpus.add_argument(
