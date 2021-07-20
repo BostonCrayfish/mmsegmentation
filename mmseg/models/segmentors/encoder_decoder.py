@@ -133,9 +133,9 @@ class EncoderDecoder(BaseSegmentor):
 
         return seg_logit
 
-    def forward(self, img):
+    def forward(self, img, mask):
         x = self.extract_feat(img)
-        return self._decode_head_forward_test(x, None)
+        return self.decode_head.forward(x, mask)
 
     def forward_train(self, img, img_metas, gt_semantic_seg):
         """Forward function for training.
