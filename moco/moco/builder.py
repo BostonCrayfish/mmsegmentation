@@ -131,16 +131,16 @@ class MoCo(nn.Module):
         """
 
         # compute query features
-        q_pos, q_neg = self.encoder_q(im_q, mask_q)  # queries: NxC
+        q = self.encoder_q(im_q)  # queries: NxC
         # print(q.shape, mask_q.shape)
         # import time
         # time.sleep(10)
 
         # mask_q dim=(1, 2)
-        # q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
-        # q_pos = nn.functional.normalize(q_pos, dim=1)
-        # q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
-        # q_neg = nn.functional.normalize(q_neg, dim=1)
+        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
+        q_pos = nn.functional.normalize(q_pos, dim=1)
+        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
+        q_neg = nn.functional.normalize(q_neg, dim=1)
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -149,17 +149,15 @@ class MoCo(nn.Module):
             # shuffle for making use of BN
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
-            k_pos, k_neg = self.encoder_k(im_k, mask_k)  # keys: NxC
-
+            k = self.encoder_k(im_k)  # keys: NxC
             # undo shuffle
-            k_pos = self._batch_unshuffle_ddp(k_pos, idx_unshuffle)
-            k_neg = self._batch_unshuffle_ddp(k_neg, idx_unshuffle)
+            k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
             ###
-            # k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
-            # k_pos = nn.functional.normalize(k_pos, dim=1)
-            # k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
-            # k_neg = nn.functional.normalize(k_neg, dim=1)
+            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
+            k_pos = nn.functional.normalize(k_pos, dim=1)
+            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
+            k_neg = nn.functional.normalize(k_neg, dim=1)
 
         # compute logits
         # Einstein sum is more intuitive
