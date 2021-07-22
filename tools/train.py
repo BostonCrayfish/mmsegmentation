@@ -24,7 +24,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
     parser.add_argument(
         'config',
-        default='/home/feng/mmsegmentation/configs/my_config/deeplabv3_r50_voc12_d16.py',
         help='train config file path')
     parser.add_argument(
         '--work-dir',

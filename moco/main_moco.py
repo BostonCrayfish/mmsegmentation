@@ -378,12 +378,6 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
 
-        global_step = i + epoch * (args.num_images // args.batch_size)
-        writer.add_scalar('loss_moco', loss_moco.item(), global_step)
-        writer.add_scalar('loss_seg', loss_seg.item(), global_step)
-        writer.add_scalar('acc1', acc1[0], global_step)
-        writer.add_scalar('acc5', acc5[0], global_step)
-
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
@@ -395,6 +389,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
+        if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
+            global_step = i + epoch * (args.num_images // args.batch_size) / 4
+            writer.add_scalar('loss_moco', loss_moco.item(), global_step)
+            writer.add_scalar('loss_seg', loss_seg.item(), global_step)
+            writer.add_scalar('acc1', acc1[0], global_step)
+            writer.add_scalar('acc5', acc5[0], global_step)
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):

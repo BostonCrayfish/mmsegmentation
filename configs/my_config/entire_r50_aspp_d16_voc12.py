@@ -1,11 +1,12 @@
 # model settings
-# norm_cfg = dict(type='SyncBN', requires_grad=True)
-norm_cfg = dict(type='BN', requires_grad=True)
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+# norm_cfg = dict(type='BN', requires_grad=True)
 
 # decide data directory by home name
 # please remove these lines and directly set data_root for your training
 import os
 if '/home/feng' in os.getcwd():
+    # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
     pretrain_path = '/home/feng/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
     data_root = '/export/ccvl11b/cwei/data/VOC2012'
 elif '/home/cwei' in os.getcwd():
