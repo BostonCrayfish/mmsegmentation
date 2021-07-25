@@ -66,7 +66,7 @@ class EncoderDecoder(BaseSegmentor):
 
         super(EncoderDecoder, self).init_weights(pretrained)
         self.backbone.init_weights(pretrained=pretrained)
-        self.decode_head.init_weights(pretrained='/home/cwei/feng/work_mmseg/checkpoints/sss/seg_moco_r50_d16_20ep_0724.pth')
+        self.decode_head.init_weights()
         if self.with_auxiliary_head:
             if isinstance(self.auxiliary_head, nn.ModuleList):
                 for aux_head in self.auxiliary_head:
