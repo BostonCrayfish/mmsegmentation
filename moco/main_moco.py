@@ -8,6 +8,7 @@ import random
 import shutil
 import time
 import warnings
+import logging
 
 import torch
 import torch.nn as nn
@@ -28,6 +29,14 @@ from moco.moco import loader as moco_loader
 from moco.moco import builder_mlp as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
+
+logger_moco = logging.getLogger(__name__)
+logger_moco.setLevel(level=logging.INFO)
+handler = logging.FileHandler('./log_moco.txt')
+handler.setLevel(level=logging.INFO)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+logger_moco.addHandler(handler)
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -439,6 +448,7 @@ class ProgressMeter(object):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         print('\t'.join(entries))
+        logger_moco.info('\t'.join(entries))
 
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
