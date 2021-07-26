@@ -125,10 +125,12 @@ class ASPPHead(BaseDecodeHead):
         output = self.bottleneck(aspp_outs)
 
         x_fore = (torch.mul(output.permute(1, 0, 2, 3), mask).sum(dim=(2, 3)) / mask.sum(dim=(1, 2))).T
-        x_fore = nn.functional.normalize(x_fore, dim=1)
+        # x_fore = nn.functional.normalize(x_fore, dim=1)
         x_back = (torch.mul(output.permute(1, 0, 2, 3), (1 - mask)).sum(dim=(2, 3)) / (1 - mask).sum(dim=(1, 2))).T
-        x_back = nn.functional.normalize(x_back, dim=1)
+        # x_back = nn.functional.normalize(x_back, dim=1)
 
         output_fore = self.moco_mlp(x_fore)
         output_back = self.moco_mlp(x_back)
+        output_fore = nn.functional.normalize(output_fore, dim=1)
+        output_back = nn.functional.normalize(output_back, dim=1)
         return output_fore, output_back
