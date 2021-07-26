@@ -448,7 +448,8 @@ class ProgressMeter(object):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         print('\t'.join(entries))
-        logger_moco.info('\t'.join(entries))
+        if torch.distributed.get_rank() == 0:
+            logger_moco.info('\t'.join(entries))
 
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
