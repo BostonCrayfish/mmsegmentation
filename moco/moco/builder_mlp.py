@@ -177,7 +177,7 @@ class MoCo(nn.Module):
 
         # try dense loss
         # logits: Nx(1+K) add line 172
-        logits = torch.cat([l_pos, l_neg, l_neg_bg], dim=1)
+        logits = torch.cat([l_pos, l_neg], dim=1)
         # logits for backgrounds: Nx3
         logits_bg = torch.cat([l_pos, l_neg_bg], dim=1)
 
@@ -189,7 +189,8 @@ class MoCo(nn.Module):
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
 
         # dequeue and enqueue
-        self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
+        # self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
+        self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
 
         return logits, logits_bg, labels
 
