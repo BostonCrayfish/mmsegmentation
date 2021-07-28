@@ -1,6 +1,6 @@
 # model settings
-# norm_cfg = dict(type='SyncBN', requires_grad=True)
-norm_cfg = dict(type='BN', requires_grad=True)
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+# norm_cfg = dict(type='BN', requires_grad=True)
 
 # decide data directory by home name
 # please remove these lines and directly set data_root for your training
