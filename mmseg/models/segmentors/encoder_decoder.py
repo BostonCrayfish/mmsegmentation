@@ -66,7 +66,7 @@ class EncoderDecoder(BaseSegmentor):
 
         super(EncoderDecoder, self).init_weights(pretrained)
         self.backbone.init_weights(pretrained=pretrained)
-        self.decode_head.init_weights()
+        self.decode_head.init_weights(pretrained='/home/cwei/feng/work_mmseg/checkpoints/sss/moco_aspp_bsl_0731.pth')
         if self.with_auxiliary_head:
             if isinstance(self.auxiliary_head, nn.ModuleList):
                 for aux_head in self.auxiliary_head:
@@ -133,9 +133,9 @@ class EncoderDecoder(BaseSegmentor):
 
         return seg_logit
 
-    def forward(self, img, mask):
-        x = self.extract_feat(img)
-        return self.decode_head.forward(x, mask)
+    # def forward(self, img, mask):
+    #     x = self.extract_feat(img)
+    #     return self.decode_head.forward(x, mask)
 
     def forward_train(self, img, img_metas, gt_semantic_seg):
         """Forward function for training.

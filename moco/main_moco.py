@@ -30,6 +30,8 @@ from moco.moco import builder_mlp as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
 handler = logging.FileHandler('./log_moco.txt')
@@ -141,7 +143,8 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
-    ngpus_per_node = torch.cuda.device_count()
+    # ngpus_per_node = torch.cuda.device_count()
+    ngpus_per_node = 4
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -155,12 +158,20 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    if '/home/feng' in os.getcwd():
+    # if '/home/feng' in os.getcwd():
+    #     cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+    # elif '/home/cwei' in os.getcwd():
+    #     cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+    # else:
+    #     raise ValueError('unknown path for configuration')
+    if args.device_name == 'ccvl11':
         cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
-    elif '/home/cwei' in os.getcwd():
+    elif args.device_name == 'ccvl8':
         cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+    elif args.device_name == 's2':
+        cfg = Config.fromfile('/home/qinghua-user3/deep-learning/mmseg/configs/my_config/entire_r50_aspp_d16_voc12.py')
     else:
-        raise ValueError('unknown path for configuration')
+        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
     args.gpu = gpu
 
     # suppress printing if not master
@@ -251,6 +262,8 @@ def main_worker(gpu, ngpus_per_node, args):
         data_dir = '/export/ccvl11b/cwei/data/ImageNet'
     elif args.device_name == 'ccvl8':
         data_dir = '/home/cwei/feng/data/ImageNet'
+    elif args.device_name == 's2':
+        data_dir = '/stor2/wangfeng/ImageNet'
     elif args.device_name == None and args.data:
         data_dir = args.data
     else:
@@ -379,7 +392,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         output_bank, output_loc, target = model(image_q, image_k, mask_q[:, ::16, ::16], mask_k[:, ::16, ::16])
         loss_moco = criterion(output_bank, target)
         loss_seg = criterion(output_loc, target)
-        loss = loss_moco
+        loss = loss_moco + loss_seg
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss

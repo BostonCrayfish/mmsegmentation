@@ -1,6 +1,6 @@
 # model settings
-# norm_cfg = dict(type='SyncBN', requires_grad=True)
-norm_cfg = dict(type='BN', requires_grad=True)
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+# norm_cfg = dict(type='BN', requires_grad=True)
 
 # decide data directory by home name
 # please remove these lines and directly set data_root for your training
@@ -16,6 +16,7 @@ norm_cfg = dict(type='BN', requires_grad=True)
 #     raise ValueError('unknown data directory')
 
 pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
+# pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
 data_root = '/home/cwei/feng/data/VOC2012'
 
 model = dict(
