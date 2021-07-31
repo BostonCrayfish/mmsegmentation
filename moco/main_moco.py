@@ -368,7 +368,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         # generate mask by RandomErasing
-        msk_gen = transforms.RandomErasing(p=1., scale=(0.02, 0.33), ratio=(0.3, 3.3), value=1.)
+        msk_gen = transforms.RandomErasing(p=1., scale=(0.25, 0.75), ratio=(0.3, 3.3), value=1.)
         mask_q = msk_gen(torch.zeros(images[0].size(0), 224, 224))  # batch size
         mask_k = msk_gen(torch.zeros(images[0].size(0), 224, 224))
 
