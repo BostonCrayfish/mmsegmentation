@@ -368,9 +368,13 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         # generate mask by RandomErasing
-        msk_gen = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
-        mask_q = msk_gen(torch.zeros(images[0].size(0), 224, 224))  # batch size
-        mask_k = msk_gen(torch.zeros(images[0].size(0), 224, 224))
+        batch_local = images[0].size(0)
+        msk_gen = [transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+                   for _ in range(batch_local * 2)]
+        mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
+        mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
+        # mask_q = msk_gen(torch.zeros(images[0].size(0), 224, 224))  # batch size
+        # mask_k = msk_gen(torch.zeros(images[0].size(0), 224, 224))
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
