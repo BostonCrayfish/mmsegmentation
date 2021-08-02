@@ -1,14 +1,13 @@
 # model settings
 
-import os
-
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 # norm_cfg = dict(type='BN', requires_grad=True)
 
-if '/home/cwei' in os.getcwd():
+device_name = 'ccvl8'
+if device_name == 'ccvl8':
     pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
     data_root = '/home/cwei/feng/data/VOC2012'
-elif '/home/qinghua-user3' in os.getcwd():
+elif device_name == 's2':
     pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
     data_root = '/stor2/wangfeng/VOC2012'
 else:
