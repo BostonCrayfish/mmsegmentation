@@ -187,7 +187,8 @@ class MoCo(nn.Module):
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
 
         # dequeue and enqueue
-        self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
+        # self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
+        self._dequeue_and_enqueue(k_pos)
 
         return logits, logits_bg, labels
 

@@ -9,6 +9,7 @@ import shutil
 import time
 import warnings
 import logging
+import pickle
 
 import torch
 import torch.nn as nn
@@ -26,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_mlp as moco_builder
+from moco.moco import builder as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -158,21 +159,22 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    # if '/home/feng' in os.getcwd():
-    #     cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
-    # elif '/home/cwei' in os.getcwd():
-    #     cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
-    # else:
-    #     raise ValueError('unknown path for configuration')
+    # for ease running on different devices
     if args.device_name == 'ccvl11':
-        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
+        config_dir = '/home/feng/mmsegmentation/configs/my_config'
     elif args.device_name == 'ccvl8':
-        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+        data_dir = '/home/cwei/feng/data/ImageNet'
+        config_dir = '/home/cwei/feng/mmsegmentation/configs/my_config'
     elif args.device_name == 's2':
-        cfg = Config.fromfile('/home/qinghua-user3/deep-learning/mmseg/configs/my_config/entire_r50_aspp_d16_voc12.py')
+        data_dir = '/stor2/wangfeng/ImageNet'
+        config_dir = '/home/qinghua-user3/deep-learning/mmseg/configs/my_config'
     else:
-        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+        raise ValueError("missing data directory or unknown device")
+
+    cfg = Config.fromfile(config_dir + '/entire_r50_aspp_d16_voc12.py')
     args.gpu = gpu
+    args.config_dir = config_dir
 
     # suppress printing if not master
     if args.multiprocessing_distributed and args.gpu != 0:
@@ -258,16 +260,6 @@ def main_worker(gpu, ngpus_per_node, args):
     # Data loading code
     # set different paths to data
     # for ease running on different devices
-    if args.device_name == 'ccvl11':
-        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
-    elif args.device_name == 'ccvl8':
-        data_dir = '/home/cwei/feng/data/ImageNet'
-    elif args.device_name == 's2':
-        data_dir = '/stor2/wangfeng/ImageNet'
-    elif args.device_name == None and args.data:
-        data_dir = args.data
-    else:
-        raise ValueError("missing data directory or unknown device")
     traindir = os.path.join(data_dir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -359,6 +351,10 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
+    # load stored masks
+    # with open(args.config_dir + '/random_mask.pk', 'rb') as f:
+    #     random_mask = torch.tensor(pickle.load(f))
+
     # switch to train mode
     model.train()
 
@@ -368,13 +364,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         # generate mask by RandomErasing
-        batch_local = images[0].size(0)
-        msk_gen = [transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
-                   for _ in range(batch_local * 2)]
-        mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
-        mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
-        # mask_q = msk_gen(torch.zeros(images[0].size(0), 224, 224))  # batch size
-        # mask_k = msk_gen(torch.zeros(images[0].size(0), 224, 224))
+        # batch_local = images[0].size(0)
+        # msk_gen = [transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        #            for _ in range(batch_local * 2)]
+        # mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
+        # mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
+        mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
