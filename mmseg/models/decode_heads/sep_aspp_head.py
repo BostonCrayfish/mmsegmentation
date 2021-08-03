@@ -4,7 +4,7 @@ from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
 
 from mmseg.ops import resize
 from ..builder import HEADS
-from .aspp_head_moco_mlp import ASPPHead, ASPPModule
+from .aspp_head_moco import ASPPHead, ASPPModule
 
 
 class DepthwiseSeparableASPPModule(ASPPModule):

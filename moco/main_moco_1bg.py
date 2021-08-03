@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_mlp as moco_builder
+from moco.moco import builder_1bg as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -326,16 +326,15 @@ def main_worker(gpu, ngpus_per_node, args):
 
 def train(train_loader_list, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
-    data_time = AverageMeter('Data', ':6.3f')
-    loss_mf = AverageMeter('Loss_moco', ':.4e')
-    loss_mb = AverageMeter('Loss_moco', ':.4e')
+    loss_mf = AverageMeter('Loss_mf', ':.4e')
+    loss_mb = AverageMeter('Loss_mb', ':.4e')
     loss_s = AverageMeter('Loss_seg', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    top1 = AverageMeter('@1', ':6.2f')
+    top5 = AverageMeter('@5', ':6.2f')
     train_loader, train_loader_bg = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, loss_mf, loss_mb, loss_s, top1, top5],
+        [batch_time, loss_mf, loss_mb, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
     # load stored masks
@@ -348,7 +347,6 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     end = time.time()
     for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
         # measure data loading time
-        data_time.update(time.time() - end)
 
         msk_gen_q = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
         msk_gen_k = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
