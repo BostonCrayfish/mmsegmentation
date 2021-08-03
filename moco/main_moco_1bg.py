@@ -9,6 +9,7 @@ import shutil
 import time
 import warnings
 import logging
+import pickle
 
 import torch
 import torch.nn as nn
@@ -29,6 +30,8 @@ from moco.moco import loader as moco_loader
 from moco.moco import builder_mlp as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -141,7 +144,8 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
-    ngpus_per_node = torch.cuda.device_count()
+    # ngpus_per_node = torch.cuda.device_count()
+    ngpus_per_node = 4
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -155,13 +159,22 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    if '/home/feng' in os.getcwd():
-        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
-    elif '/home/cwei' in os.getcwd():
-        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+    # for ease running on different devices
+    if args.device_name == 'ccvl11':
+        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
+        config_dir = '/home/feng/mmsegmentation/configs/my_config'
+    elif args.device_name == 'ccvl8':
+        data_dir = '/home/cwei/feng/data/ImageNet'
+        config_dir = '/home/cwei/feng/mmsegmentation/configs/my_config'
+    elif args.device_name == 's2':
+        data_dir = '/stor2/wangfeng/ImageNet'
+        config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
     else:
-        raise ValueError('unknown path for configuration')
+        raise ValueError("missing data directory or unknown device")
+
+    cfg = Config.fromfile(config_dir + '/entire_r50_aspp_d16_voc12.py')
     args.gpu = gpu
+    args.config_dir = config_dir
 
     # suppress printing if not master
     if args.multiprocessing_distributed and args.gpu != 0:
@@ -247,14 +260,6 @@ def main_worker(gpu, ngpus_per_node, args):
     # Data loading code
     # set different paths to data
     # for ease running on different devices
-    if args.device_name == 'ccvl11':
-        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
-    elif args.device_name == 'ccvl8':
-        data_dir = '/home/cwei/feng/data/ImageNet'
-    elif args.device_name == None and args.data:
-        data_dir = args.data
-    else:
-        raise ValueError("missing data directory or unknown device")
     traindir = os.path.join(data_dir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -285,43 +290,29 @@ def main_worker(gpu, ngpus_per_node, args):
     train_dataset = datasets.ImageFolder(
         traindir,
         moco_loader.TwoCropsTransform(transforms.Compose(augmentation)))
-    train_dataset_bg = datasets.ImageFolder(
-        traindir,
-        transforms.Compose(augmentation))
 
-    # load training data in three processes:
-    # 1. train_*: foreground image
-    # 2. train_*_bg0: background image 0
-    # 3. train_*_bg1: background image 1
-    # This process is convenient to load data for epochs
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, seed=0)
-        train_sampler_bg0 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=1024)
-        train_sampler_bg1 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=2048)
+        train_sampler_bg = torch.utils.data.distributed.DistributedSampler(train_dataset, seed=1024)
     else:
         train_sampler = None
-        train_sampler_bg0 = None
-        train_sampler_bg1 = None
+        train_sampler_bg = None
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
-    train_loader_bg0 = torch.utils.data.DataLoader(
-        train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg0 is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg0, drop_last=True)
-    train_loader_bg1 = torch.utils.data.DataLoader(
-        train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
+    train_loader_bg = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler_bg is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg, drop_last=True)
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-            train_sampler_bg0.set_epoch(epoch)
-            train_sampler_bg1.set_epoch(epoch)
+            train_sampler_bg.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train([train_loader, train_loader_bg0, train_loader_bg1], model, criterion, optimizer, epoch, args)
+        train([train_loader, train_loader_bg], model, criterion, optimizer, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -336,41 +327,61 @@ def main_worker(gpu, ngpus_per_node, args):
 def train(train_loader_list, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
-    loss_m = AverageMeter('Loss_moco', ':.4e')
+    loss_mf = AverageMeter('Loss_moco', ':.4e')
+    loss_mb = AverageMeter('Loss_moco', ':.4e')
     loss_s = AverageMeter('Loss_seg', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
-    train_loader, _, _ = train_loader_list
+    train_loader, train_loader_bg = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, loss_m, loss_s, top1, top5],
+        [batch_time, data_time, loss_mf, loss_mb, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
+
+    # load stored masks
+    # with open(args.config_dir + '/random_mask.pk', 'rb') as f:
+    #     random_mask = torch.tensor(pickle.load(f))
 
     # switch to train mode
     model.train()
 
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        fake_mask = torch.ones(images[0].size(0), 14, 14)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
+        mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
-            fake_mask = fake_mask.cuda(args.gpu, non_blocking=True)
+            bgs[0] = bgs[0].cuda(args.gpu, non_blocking=True)
+            bgs[1] = bgs[1].cuda(args.gpu, non_blocking=True)
+            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
+            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
+
+        # generate patched images
+        image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
+        image_q = image_q.permute(1, 0, 2, 3)
+        image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
+        image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        output_bank, output_loc, target = model(images[0], images[1], fake_mask, fake_mask)
-        loss_moco = criterion(output_bank, target)
-        loss_seg = criterion(output_loc, target)
-        loss = loss_moco
+        output_fore, output_back, output_seg, target =\
+            model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+        loss_fore = criterion(output_fore, target)
+        loss_back = criterion(output_back, target)
+        loss_seg = criterion(output_seg, target)
+        loss = loss_fore + loss_back + loss_seg
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output_bank, target, topk=(1, 5))
-        loss_m.update(loss_moco.item(), images[0].size(0))
+        acc1, acc5 = accuracy(output_fore, target, topk=(1, 5))
+        loss_mf.update(loss_fore.item(), images[0].size(0))
+        loss_mb.update(loss_back.item(), images[0].size(0))
         loss_s.update(loss_seg.item(), images[0].size(0))
         top1.update(acc1[0], images[0].size(0))
         top5.update(acc5[0], images[0].size(0))
@@ -388,7 +399,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             progress.display(i)
         if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
             global_step = i + epoch * (args.num_images // args.batch_size) / 4
-            writer.add_scalar('loss_moco', loss_moco.item(), global_step)
+            writer.add_scalar('loss_fore', loss_fore.item(), global_step)
+            writer.add_scalar('loss_back', loss_back.item(), global_step)
             writer.add_scalar('loss_seg', loss_seg.item(), global_step)
             writer.add_scalar('acc1', acc1[0], global_step)
             writer.add_scalar('acc5', acc5[0], global_step)
