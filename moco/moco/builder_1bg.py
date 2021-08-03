@@ -159,37 +159,37 @@ class MoCo(nn.Module):
             k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
             k_neg = nn.functional.normalize(k_neg, dim=1)
 
-            # compute logits
-            # Einstein sum is more intuitive
-            # positive logits: Nx1
-            l_fore_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
-            l_fore_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
+        # compute logits
+        # Einstein sum is more intuitive
+        # positive logits: Nx1
+        l_fore_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
+        l_fore_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
 
-            l_back_pos = torch.einsum('nc,nc->n', [q_neg, k_neg]).unsqueeze(-1)
-            l_back_neg = torch.einsum('nc,ck->nk', [q_neg, self.queue.clone().detach()])
+        l_back_pos = torch.einsum('nc,nc->n', [q_neg, k_neg]).unsqueeze(-1)
+        l_back_neg = torch.einsum('nc,ck->nk', [q_neg, self.queue.clone().detach()])
 
-            l_seg = torch.cat(
-                [torch.einsum('nc,nc->n', [q_pos, q_neg]).unsqueeze(-1),
-                 torch.einsum('nc,nc->n', [q_pos, k_neg]).unsqueeze(-1)],
-                dim=1)
+        l_seg = torch.cat(
+            [torch.einsum('nc,nc->n', [q_pos, q_neg]).unsqueeze(-1),
+             torch.einsum('nc,nc->n', [q_pos, k_neg]).unsqueeze(-1)],
+            dim=1)
 
-            logits_fore = torch.cat([l_fore_pos, l_fore_neg], dim=1)
-            logits_back = torch.cat([l_back_pos, l_back_neg], dim=1)
-            logits_seg = torch.cat([l_fore_pos, l_seg], dim=1)
+        logits_fore = torch.cat([l_fore_pos, l_fore_neg], dim=1)
+        logits_back = torch.cat([l_back_pos, l_back_neg], dim=1)
+        logits_seg = torch.cat([l_fore_pos, l_seg], dim=1)
 
-            # apply temperature
-            logits_fore /= self.T
-            logits_back /= self.T
-            logits_seg /= self.T
+        # apply temperature
+        logits_fore /= self.T
+        logits_back /= self.T
+        logits_seg /= self.T
 
-            # labels: positive key indicators
-            labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
+        # labels: positive key indicators
+        labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
 
-            # dequeue and enqueue
-            self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
-            # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
+        # dequeue and enqueue
+        self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
+        # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
 
-            return logits_fore, logits_back, logits_seg, labels
+        return logits_fore, logits_back, logits_seg, labels
 
 
 # utils
