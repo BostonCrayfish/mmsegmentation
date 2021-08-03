@@ -1,6 +1,6 @@
 from .ann_head import ANNHead
 from .apc_head import APCHead
-from .aspp_head_moco import ASPPHead
+from .aspp_head_moco_mlp import ASPPHead
 from .cc_head import CCHead
 from .da_head import DAHead
 from .dm_head import DMHead
