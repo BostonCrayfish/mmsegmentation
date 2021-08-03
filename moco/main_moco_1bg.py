@@ -31,7 +31,7 @@ from moco.moco import builder_1bg as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
