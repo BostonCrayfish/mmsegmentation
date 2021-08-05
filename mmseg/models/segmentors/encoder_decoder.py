@@ -66,7 +66,7 @@ class EncoderDecoder(BaseSegmentor):
 
         super(EncoderDecoder, self).init_weights(pretrained)
         self.backbone.init_weights(pretrained=pretrained)
-        self.decode_head.init_weights(pretrained='/home/feng/work_mmseg/checkpoints/sss/sss_1bg_conv_0805.pth')
+        self.decode_head.init_weights(pretrained='/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1bg_mlp_0805.pth')
         # self.decode_head.init_weights()
         if self.with_auxiliary_head:
             if isinstance(self.auxiliary_head, nn.ModuleList):
