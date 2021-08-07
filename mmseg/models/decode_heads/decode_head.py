@@ -80,7 +80,7 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         else:
             self.sampler = None
 
-        self.conv_seg = nn.Conv2d(1024, num_classes, kernel_size=1)
+        self.conv_seg = nn.Conv2d(2048, num_classes, kernel_size=1)
         if dropout_ratio > 0:
             self.dropout = nn.Dropout2d(dropout_ratio)
         else:
