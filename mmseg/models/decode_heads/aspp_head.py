@@ -85,7 +85,7 @@ class ASPPHead(BaseDecodeHead):
             act_cfg=self.act_cfg)
         self.bottleneck = ConvModule(
             (len(dilations) + 1) * self.channels,
-            self.channels,
+            2048,
             3,
             padding=1,
             conv_cfg=self.conv_cfg,
