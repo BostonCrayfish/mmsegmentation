@@ -149,9 +149,8 @@ class MoCo(nn.Module):
         # q_pos = nn.functional.normalize(q_pos, dim=1)
         # q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
         # q_neg = nn.functional.normalize(q_neg, dim=1)
-        trans_shape = nn.Linear(2048, 128)
-        q_pos = trans_shape(q.mean(dim=(2, 3)))
-        q_neg = trans_shape(q.mean(dim=(2, 3)))
+        q_pos = q.mean(dim=(2, 3))[:, 0:128]
+        q_neg = q.mean(dim=(2, 3))[:, 0:128]
 
         print('line: 148, time: {}'.format(time.time() - end))
         end = time.time()
@@ -178,8 +177,8 @@ class MoCo(nn.Module):
             # k_pos = nn.functional.normalize(k_pos, dim=1)
             # k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
             # k_neg = nn.functional.normalize(k_neg, dim=1)
-            k_pos = trans_shape(k.mean(dim=(2, 3)))
-            k_neg = trans_shape(k.mean(dim=(2, 3)))
+            k_pos = k.mean(dim=(2, 3))[:, 0:128]
+            k_neg = k.mean(dim=(2, 3))[:, 0:128]
 
         print('line: 168, time: {}'.format(time.time() - end))
         end = time.time()
