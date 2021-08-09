@@ -133,7 +133,8 @@ class MoCo(nn.Module):
         end = time.time()
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-
+        print('line: 136, time: {}'.format(time.time() - end))
+        end = time.time()
         # print(q.shape, mask_q.shape)
         # import time
         # time.sleep(10)
@@ -143,6 +144,9 @@ class MoCo(nn.Module):
         q_pos = nn.functional.normalize(q_pos, dim=1)
         q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
         q_neg = nn.functional.normalize(q_neg, dim=1)
+
+        print('line: 148, time: {}'.format(time.time() - end))
+        end = time.time()
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -161,6 +165,8 @@ class MoCo(nn.Module):
             k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
             k_neg = nn.functional.normalize(k_neg, dim=1)
 
+        print('line: 168, time: {}'.format(time.time() - end))
+        end = time.time()
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
@@ -186,11 +192,12 @@ class MoCo(nn.Module):
 
         # labels: positive key indicators
         labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
-
+        print('line: 195, time: {}'.format(time.time() - end))
+        end = time.time()
         # dequeue and enqueue
         self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
         # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
-        print(time.time() - end)
+        print('line: 200, time: {}'.format(time.time() - end))
         return logits_fore, logits_back, logits_seg, labels
 
 
