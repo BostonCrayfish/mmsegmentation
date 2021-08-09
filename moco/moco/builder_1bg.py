@@ -91,8 +91,10 @@ class MoCo(nn.Module):
         # random shuffle index
         idx_shuffle = torch.randperm(batch_size_all).cuda()
 
+        end = time.time()
         # broadcast to all gpus
         torch.distributed.broadcast(idx_shuffle, src=0)
+        print('in func,{}'.format(time.time()-end))
 
         # index for restoring
         idx_unshuffle = torch.argsort(idx_shuffle)
