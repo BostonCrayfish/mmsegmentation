@@ -366,7 +366,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_q = image_q.permute(1, 0, 2, 3)
         image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
         image_k = image_k.permute(1, 0, 2, 3)
-
+        batch_time.update(time.time() - end)
         # compute output
         output_fore, output_back, output_seg, target =\
             model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
@@ -390,7 +390,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         optimizer.step()
 
         # measure elapsed time
-        batch_time.update(time.time() - end)
+        # batch_time.update(time.time() - end)
         end = time.time()
 
         if i % args.print_freq == 0:
