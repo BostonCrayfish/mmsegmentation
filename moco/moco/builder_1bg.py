@@ -178,8 +178,8 @@ class MoCo(nn.Module):
             # k_pos = nn.functional.normalize(k_pos, dim=1)
             # k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
             # k_neg = nn.functional.normalize(k_neg, dim=1)
-            k_pos = k
-            k_neg = k
+            k_pos = trans_shape(k.mean(dim=(2, 3)))
+            k_pos = trans_shape(k.mean(dim=(2, 3)))
 
         print('line: 168, time: {}'.format(time.time() - end))
         end = time.time()
