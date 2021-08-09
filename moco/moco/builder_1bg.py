@@ -4,6 +4,7 @@ import torch.nn as nn
 from mmseg.models import build_segmentor
 import time
 import torchvision.models as models
+from mmseg.models.backbones.resnet import ResNet
 
 class MoCo(nn.Module):
     """
@@ -25,9 +26,11 @@ class MoCo(nn.Module):
 
         # create the encoders
         # num_classes is the output fc dimension
-        base_encoder = models.__dict__['resnet50']
-        self.encoder_q = base_encoder(num_classes=dim)
-        self.encoder_k = base_encoder(num_classes=dim)
+        # base_encoder = models.__dict__['resnet50']
+        # self.encoder_q = base_encoder(num_classes=dim)
+        # self.encoder_k = base_encoder(num_classes=dim)
+        self.encoder_q = ResNet(50)
+        self.encoder_k = ResNet(50)
 
         # self.encoder_q = build_segmentor(
         #     cfg.model,
@@ -146,8 +149,9 @@ class MoCo(nn.Module):
         # q_pos = nn.functional.normalize(q_pos, dim=1)
         # q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
         # q_neg = nn.functional.normalize(q_neg, dim=1)
-        q_pos = q
-        q_neg = q
+        trans_shape = nn.Linear(2048, 128)
+        q_pos = trans_shape(q.mean(dim=(2, 3)))
+        q_neg = trans_shape(q.mean(dim=(2, 3)))
 
         print('line: 148, time: {}'.format(time.time() - end))
         end = time.time()
