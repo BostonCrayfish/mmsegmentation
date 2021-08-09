@@ -151,13 +151,19 @@ class MoCo(nn.Module):
         # compute key features
         with torch.no_grad():  # no gradient to keys
             self._momentum_update_key_encoder()  # update the key encoder
-
+            print('line: 154, time: {}'.format(time.time() - end))
+            end = time.time()
             # shuffle for making use of BN
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
-
+            print('line: 158, time: {}'.format(time.time() - end))
+            end = time.time()
             k = self.encoder_k(im_k)  # keys: NxC
+            print('line: 161, time: {}'.format(time.time() - end))
+            end = time.time()
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
+            print('line: 165, time: {}'.format(time.time() - end))
+            end = time.time()
 
             ###
             k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
