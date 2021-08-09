@@ -133,7 +133,7 @@ class MoCo(nn.Module):
         end = time.time()
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        print(time.time() - end)
+
         # print(q.shape, mask_q.shape)
         # import time
         # time.sleep(10)
@@ -190,7 +190,7 @@ class MoCo(nn.Module):
         # dequeue and enqueue
         self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
         # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
-
+        print(time.time() - end)
         return logits_fore, logits_back, logits_seg, labels
 
 
