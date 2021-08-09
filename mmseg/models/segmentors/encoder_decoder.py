@@ -66,8 +66,8 @@ class EncoderDecoder(BaseSegmentor):
 
         super(EncoderDecoder, self).init_weights(pretrained)
         self.backbone.init_weights(pretrained=pretrained)
-        self.decode_head.init_weights(pretrained='/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/sss/sss_1bg_conv_512c_0807.pth')
-        # self.decode_head.init_weights()
+        # self.decode_head.init_weights(pretrained='/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/sss/sss_1bg_conv_512c_0807.pth')
+        self.decode_head.init_weights()
         if self.with_auxiliary_head:
             if isinstance(self.auxiliary_head, nn.ModuleList):
                 for aux_head in self.auxiliary_head:
@@ -134,9 +134,9 @@ class EncoderDecoder(BaseSegmentor):
 
         return seg_logit
 
-    # def forward(self, img):
-    #     x = self.extract_feat(img)
-    #     return self.decode_head.forward(x)
+    def forward(self, img):
+        x = self.extract_feat(img)
+        return self.decode_head.forward(x)
 
     def forward_train(self, img, img_metas, gt_semantic_seg):
         """Forward function for training.
