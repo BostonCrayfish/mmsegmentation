@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 from mmseg.models import build_segmentor
+import time
 
 class MoCo(nn.Module):
     """
@@ -129,9 +130,10 @@ class MoCo(nn.Module):
         Output:
             logits, targets
         """
-
+        end = time.time()
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
+        print(time.time() - end)
         # print(q.shape, mask_q.shape)
         # import time
         # time.sleep(10)

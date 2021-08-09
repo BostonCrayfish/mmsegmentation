@@ -370,7 +370,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # compute output
         output_fore, output_back, output_seg, target =\
             model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
-        batch_time.update(time.time() - end)
+
         loss_fore = criterion(output_fore, target)
         loss_back = criterion(output_back, target)
         loss_seg = criterion(output_seg, target)
