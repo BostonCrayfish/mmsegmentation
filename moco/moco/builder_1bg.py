@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from mmseg.models import build_segmentor
 import time
+import torchvision.models as models
 
 class MoCo(nn.Module):
     """
@@ -24,17 +25,18 @@ class MoCo(nn.Module):
 
         # create the encoders
         # num_classes is the output fc dimension
-        # self.encoder_q = base_encoder(num_classes=dim)
-        # self.encoder_k = base_encoder(num_classes=dim)
+        base_encoder = models.__dict__['resnet50']
+        self.encoder_q = base_encoder(num_classes=dim)
+        self.encoder_k = base_encoder(num_classes=dim)
 
-        self.encoder_q = build_segmentor(
-            cfg.model,
-            train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg'))
-        self.encoder_k = build_segmentor(
-            cfg.model,
-            train_cfg=cfg.get('train_cfg'),
-            test_cfg=cfg.get('test_cfg'))
+        # self.encoder_q = build_segmentor(
+        #     cfg.model,
+        #     train_cfg=cfg.get('train_cfg'),
+        #     test_cfg=cfg.get('test_cfg'))
+        # self.encoder_k = build_segmentor(
+        #     cfg.model,
+        #     train_cfg=cfg.get('train_cfg'),
+        #     test_cfg=cfg.get('test_cfg'))
 
         # if mlp:  # hack: brute-force replacement
         #     dim_mlp = self.encoder_q.fc.weight.shape[1]
@@ -91,10 +93,8 @@ class MoCo(nn.Module):
         # random shuffle index
         idx_shuffle = torch.randperm(batch_size_all).cuda()
 
-        end = time.time()
         # broadcast to all gpus
         torch.distributed.broadcast(idx_shuffle, src=0)
-        print('in func,{}'.format(time.time()-end))
 
         # index for restoring
         idx_unshuffle = torch.argsort(idx_shuffle)
