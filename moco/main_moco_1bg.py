@@ -233,7 +233,10 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     # fix parameters in backbone
-    optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
+    # optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
 
