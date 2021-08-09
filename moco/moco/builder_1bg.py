@@ -137,7 +137,7 @@ class MoCo(nn.Module):
         """
         end = time.time()
         # compute query features
-        q = self.encoder_q(im_q)  # queries: NxC
+        q = self.encoder_q(im_q)[-1]  # queries: NxC
         print('line: 136, time: {}'.format(time.time() - end))
         end = time.time()
         # print(q.shape, mask_q.shape)
@@ -165,7 +165,7 @@ class MoCo(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
             print('line: 158, time: {}'.format(time.time() - end))
             end = time.time()
-            k = self.encoder_k(im_k)  # keys: NxC
+            k = self.encoder_k(im_k)[-1]  # keys: NxC
             print('line: 161, time: {}'.format(time.time() - end))
             end = time.time()
             # undo shuffle
