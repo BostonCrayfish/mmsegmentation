@@ -142,10 +142,12 @@ class MoCo(nn.Module):
         # time.sleep(10)
 
         # mask_q dim=(1, 2)
-        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
-        q_pos = nn.functional.normalize(q_pos, dim=1)
-        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
-        q_neg = nn.functional.normalize(q_neg, dim=1)
+        # q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
+        # q_pos = nn.functional.normalize(q_pos, dim=1)
+        # q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
+        # q_neg = nn.functional.normalize(q_neg, dim=1)
+        q_pos = q
+        q_neg = q
 
         print('line: 148, time: {}'.format(time.time() - end))
         end = time.time()
@@ -168,10 +170,12 @@ class MoCo(nn.Module):
             end = time.time()
 
             ###
-            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
-            k_pos = nn.functional.normalize(k_pos, dim=1)
-            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
-            k_neg = nn.functional.normalize(k_neg, dim=1)
+            # k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
+            # k_pos = nn.functional.normalize(k_pos, dim=1)
+            # k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
+            # k_neg = nn.functional.normalize(k_neg, dim=1)
+            k_pos = k
+            k_neg = k
 
         print('line: 168, time: {}'.format(time.time() - end))
         end = time.time()
