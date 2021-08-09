@@ -356,20 +356,20 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
-            bgs[0] = bgs[0].cuda(args.gpu, non_blocking=True)
-            bgs[1] = bgs[1].cuda(args.gpu, non_blocking=True)
+            # bgs[0] = bgs[0].cuda(args.gpu, non_blocking=True)
+            # bgs[1] = bgs[1].cuda(args.gpu, non_blocking=True)
             mask_q = mask_q.cuda(args.gpu, non_blocking=True)
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
-        image_q = image_q.permute(1, 0, 2, 3)
+        # image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
+        # image_q = image_q.permute(1, 0, 2, 3)
         # image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
         # image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
         output_fore, output_back, output_seg, target =\
-            model(image_q, images[1], mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+            model(images[0], images[1], mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
 
         loss_fore = criterion(output_fore, target)
         loss_back = criterion(output_back, target)
