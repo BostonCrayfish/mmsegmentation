@@ -364,12 +364,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # generate patched images
         image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
         image_q = image_q.permute(1, 0, 2, 3)
-        image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
-        image_k = image_k.permute(1, 0, 2, 3)
+        # image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
+        # image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
         output_fore, output_back, output_seg, target =\
-            model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+            model(image_q, images[1], mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
 
         loss_fore = criterion(output_fore, target)
         loss_back = criterion(output_back, target)
