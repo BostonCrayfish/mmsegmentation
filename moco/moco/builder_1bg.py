@@ -90,36 +90,27 @@ class MoCo(nn.Module):
         *** Only support DistributedDataParallel (DDP) model. ***
         """
         # gather from all gpus
-        end = time.time()
         batch_size_this = x.shape[0]
         x_gather = concat_all_gather(x)
         batch_size_all = x_gather.shape[0]
-        print('shuffle time 1: ', time.time() - end)
-        end = time.time()
 
         num_gpus = batch_size_all // batch_size_this
-        print('shuffle time 1.1: ', time.time() - end)
-        end = time.time()
 
         # random shuffle index
-        idx_shuffle = torch.randperm(batch_size_all).cuda()
-        print('shuffle time 1.2: ', time.time() - end)
         end = time.time()
+        # idx_shuffle = torch.randperm(batch_size_all).cuda()
+        idx_shuffle = torch.randperm(batch_size_all, device='cuda')
+        print('shuffle time 1.2: ', time.time() - end)
 
         # broadcast to all gpus
         torch.distributed.broadcast(idx_shuffle, src=0)
-        print('shuffle time 1.3: ', time.time() - end)
-        end = time.time()
 
         # index for restoring
         idx_unshuffle = torch.argsort(idx_shuffle)
-        print('shuffle time 2: ', time.time() - end)
-        end = time.time()
 
         # shuffled index for this gpu
         gpu_idx = torch.distributed.get_rank()
         idx_this = idx_shuffle.view(num_gpus, -1)[gpu_idx]
-        print('shuffle time 3: ', time.time() - end)
         return x_gather[idx_this], idx_unshuffle
 
     @torch.no_grad()
