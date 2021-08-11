@@ -196,22 +196,28 @@ class MoCo(nn.Module):
         # positive logits: Nx1
         l_fore_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
         l_fore_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
+        print('logit time 1 ', time.time() - end)
+        end = time.time()
 
-        l_back_pos = torch.einsum('nc,nc->n', [q_neg, k_neg]).unsqueeze(-1)
-        l_back_neg = torch.einsum('nc,ck->nk', [q_neg, self.queue.clone().detach()])
+        # l_back_pos = torch.einsum('nc,nc->n', [q_neg, k_neg]).unsqueeze(-1)
+        # l_back_neg = torch.einsum('nc,ck->nk', [q_neg, self.queue.clone().detach()])
 
         l_seg = torch.cat(
             [torch.einsum('nc,nc->n', [q_pos, q_neg]).unsqueeze(-1),
              torch.einsum('nc,nc->n', [q_pos, k_neg]).unsqueeze(-1)],
             dim=1)
+        print('logit time 2 ', time.time() - end)
+        end = time.time()
 
         logits_fore = torch.cat([l_fore_pos, l_fore_neg], dim=1)
-        logits_back = torch.cat([l_back_pos, l_back_neg], dim=1)
+        # logits_back = torch.cat([l_back_pos, l_back_neg], dim=1)
         logits_seg = torch.cat([l_fore_pos, l_seg], dim=1)
+        print('logit time 3 ', time.time() - end)
+        end = time.time()
 
         # apply temperature
         logits_fore /= self.T
-        logits_back /= self.T
+        # logits_back /= self.T
         logits_seg /= self.T
 
         # labels: positive key indicators
@@ -222,7 +228,7 @@ class MoCo(nn.Module):
         self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
         # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
         print('line: 200, time: {}'.format(time.time() - end))
-        return logits_fore, logits_back, logits_seg, labels
+        return logits_fore, logits_fore, logits_seg, labels
 
 
 # utils
