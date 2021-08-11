@@ -98,8 +98,8 @@ class MoCo(nn.Module):
 
         # random shuffle index
         end = time.time()
-        # idx_shuffle = torch.randperm(batch_size_all).cuda()
-        idx_shuffle = torch.cuda.FloatTensor(batch_size_all).uniform_().argsort()
+        idx_shuffle = torch.randperm(batch_size_all).cuda()
+        # idx_shuffle = torch.cuda.FloatTensor(batch_size_all).uniform_().argsort()
         print('shuffle time 1.2: ', time.time() - end)
 
         # broadcast to all gpus
