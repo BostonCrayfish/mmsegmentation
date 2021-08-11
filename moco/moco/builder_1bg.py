@@ -5,6 +5,7 @@ from mmseg.models import build_segmentor
 import time
 import torchvision.models as models
 from mmseg.models.backbones.resnet import ResNet
+from moco.moco import model
 
 class MoCo(nn.Module):
     """
@@ -29,8 +30,10 @@ class MoCo(nn.Module):
         # base_encoder = models.__dict__['resnet50']
         # self.encoder_q = base_encoder(num_classes=dim)
         # self.encoder_k = base_encoder(num_classes=dim)
-        self.encoder_q = ResNet(50)
-        self.encoder_k = ResNet(50)
+        # self.encoder_q = ResNet(50)
+        # self.encoder_k = ResNet(50)
+        self.encoder_q = model.Encoder_Decoder()
+        self.encoder_k = model.Encoder_Decoder()
 
         # self.encoder_q = build_segmentor(
         #     cfg.model,
@@ -137,7 +140,7 @@ class MoCo(nn.Module):
         """
         end = time.time()
         # compute query features
-        q = self.encoder_q(im_q)[-1]  # queries: NxC
+        q = self.encoder_q(im_q)  # queries: NxC
         print('line: 136, time: {}'.format(time.time() - end))
         end = time.time()
         # print(q.shape, mask_q.shape)
@@ -149,8 +152,8 @@ class MoCo(nn.Module):
         # q_pos = nn.functional.normalize(q_pos, dim=1)
         # q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
         # q_neg = nn.functional.normalize(q_neg, dim=1)
-        q_pos = q.mean(dim=(2, 3))[:, 0:128]
-        q_neg = q.mean(dim=(2, 3))[:, 0:128]
+        q_pos = q.mean(dim=(2, 3))
+        q_neg = q.mean(dim=(2, 3))
 
         print('line: 148, time: {}'.format(time.time() - end))
         end = time.time()
@@ -164,7 +167,7 @@ class MoCo(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
             print('line: 158, time: {}'.format(time.time() - end))
             end = time.time()
-            k = self.encoder_k(im_k)[-1]  # keys: NxC
+            k = self.encoder_k(im_k)  # keys: NxC
             print('line: 161, time: {}'.format(time.time() - end))
             end = time.time()
             # undo shuffle
@@ -177,8 +180,8 @@ class MoCo(nn.Module):
             # k_pos = nn.functional.normalize(k_pos, dim=1)
             # k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
             # k_neg = nn.functional.normalize(k_neg, dim=1)
-            k_pos = k.mean(dim=(2, 3))[:, 0:128]
-            k_neg = k.mean(dim=(2, 3))[:, 0:128]
+            k_pos = k.mean(dim=(2, 3))
+            k_neg = k.mean(dim=(2, 3))
 
         print('line: 168, time: {}'.format(time.time() - end))
         end = time.time()
