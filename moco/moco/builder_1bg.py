@@ -154,6 +154,8 @@ class MoCo(nn.Module):
         # q_neg = nn.functional.normalize(q_neg, dim=1)
         # q_pos = q.mean(dim=(2, 3))
         # q_neg = q.mean(dim=(2, 3))
+        q_pos = q
+        q_neg = q
 
         print('line: 148, time: {}'.format(time.time() - end))
         end = time.time()
@@ -182,6 +184,8 @@ class MoCo(nn.Module):
             # k_neg = nn.functional.normalize(k_neg, dim=1)
             # k_pos = k.mean(dim=(2, 3))
             # k_neg = k.mean(dim=(2, 3))
+            k_pos = k
+            k_neg = k
 
         print('line: 168, time: {}'.format(time.time() - end))
         end = time.time()
