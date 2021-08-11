@@ -94,6 +94,8 @@ class MoCo(nn.Module):
         batch_size_this = x.shape[0]
         x_gather = concat_all_gather(x)
         batch_size_all = x_gather.shape[0]
+        print('shuffle time 1: ', time.time() - end)
+        end = time.time()
 
         num_gpus = batch_size_all // batch_size_this
 
@@ -105,11 +107,13 @@ class MoCo(nn.Module):
 
         # index for restoring
         idx_unshuffle = torch.argsort(idx_shuffle)
+        print('shuffle time 2: ', time.time() - end)
+        end = time.time()
 
         # shuffled index for this gpu
         gpu_idx = torch.distributed.get_rank()
         idx_this = idx_shuffle.view(num_gpus, -1)[gpu_idx]
-        print('shuffle time: ', time.time() - end)
+        print('shuffle time 3: ', time.time() - end)
         return x_gather[idx_this], idx_unshuffle
 
     @torch.no_grad()
