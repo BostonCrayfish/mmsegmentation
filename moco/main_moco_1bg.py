@@ -346,7 +346,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
     # switch to train mode
     model.train()
-    target = torch.zeros(64, dtype=torch.long).cuda()
+    target = torch.zeros(64, dtype=torch.long).cuda(args.gpu, non_blocking=True)
 
     end = time.time()
     for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
