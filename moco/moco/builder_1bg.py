@@ -222,7 +222,7 @@ class MoCo(nn.Module):
 
         # labels: positive key indicators
         # labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
-        labels = torch.cuda.LongTensor(logits_fore.shape[0])
+        labels = torch.cuda.FloatTensor(logits_fore.shape[0]).long()
         print('line: 195, time: {}'.format(time.time() - end))
         end = time.time()
         # dequeue and enqueue
