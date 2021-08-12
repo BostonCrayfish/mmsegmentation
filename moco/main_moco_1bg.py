@@ -381,12 +381,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output_fore, target, topk=(1, 5))
+        # acc1, acc5 = accuracy(output_fore, target, topk=(1, 5))
         loss_mf.update(loss_fore.item(), images[0].size(0))
         loss_mb.update(loss_back.item(), images[0].size(0))
         loss_s.update(loss_seg.item(), images[0].size(0))
-        top1.update(acc1[0], images[0].size(0))
-        top5.update(acc5[0], images[0].size(0))
+        # top1.update(acc1[0], images[0].size(0))
+        # top5.update(acc5[0], images[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -397,15 +397,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % args.print_freq == 0:
-            progress.display(i)
-        if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
-            global_step = i + epoch * (args.num_images // args.batch_size) / 4
-            writer.add_scalar('loss_fore', loss_fore.item(), global_step)
-            writer.add_scalar('loss_back', loss_back.item(), global_step)
-            writer.add_scalar('loss_seg', loss_seg.item(), global_step)
-            writer.add_scalar('acc1', acc1[0], global_step)
-            writer.add_scalar('acc5', acc5[0], global_step)
+        # if i % args.print_freq == 0:
+        #     progress.display(i)
+        # if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
+        #     global_step = i + epoch * (args.num_images // args.batch_size) / 4
+        #     writer.add_scalar('loss_fore', loss_fore.item(), global_step)
+        #     writer.add_scalar('loss_back', loss_back.item(), global_step)
+        #     writer.add_scalar('loss_seg', loss_seg.item(), global_step)
+        #     writer.add_scalar('acc1', acc1[0], global_step)
+        #     writer.add_scalar('acc5', acc5[0], global_step)
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
