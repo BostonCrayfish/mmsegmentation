@@ -340,13 +340,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, loss_mf, loss_mb, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
-    # load stored masks
-    # with open(args.config_dir + '/random_mask.pk', 'rb') as f:
-    #     random_mask = torch.tensor(pickle.load(f))
-
     # switch to train mode
     model.train()
-    target = torch.zeros(64, dtype=torch.long).cuda(args.gpu, non_blocking=True)
 
     end = time.time()
     for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
@@ -360,20 +355,20 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
-            # bgs[0] = bgs[0].cuda(args.gpu, non_blocking=True)
-            # bgs[1] = bgs[1].cuda(args.gpu, non_blocking=True)
+            bgs[0] = bgs[0].cuda(args.gpu, non_blocking=True)
+            bgs[1] = bgs[1].cuda(args.gpu, non_blocking=True)
             mask_q = mask_q.cuda(args.gpu, non_blocking=True)
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        # image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
-        # image_q = image_q.permute(1, 0, 2, 3)
-        # image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
-        # image_k = image_k.permute(1, 0, 2, 3)
+        image_q = images[0].permute(1, 0, 2, 3) * mask_q + bgs[0].permute(1, 0, 2, 3) * (1 - mask_q)
+        image_q = image_q.permute(1, 0, 2, 3)
+        image_k = images[1].permute(1, 0, 2, 3) * mask_k + bgs[1].permute(1, 0, 2, 3) * (1 - mask_k)
+        image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        output_fore, output_back, output_seg =\
-            model(images[0], images[1], mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+        output_fore, output_back, output_seg, target =\
+            model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
 
         loss_fore = criterion(output_fore, target)
         loss_back = criterion(output_back, target)
@@ -382,12 +377,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
-        # acc1, acc5 = accuracy(output_fore, target, topk=(1, 5))
+        acc1, acc5 = accuracy(output_fore, target, topk=(1, 5))
         loss_mf.update(loss_fore.item(), images[0].size(0))
         loss_mb.update(loss_back.item(), images[0].size(0))
         loss_s.update(loss_seg.item(), images[0].size(0))
-        # top1.update(acc1[0], images[0].size(0))
-        # top5.update(acc5[0], images[0].size(0))
+        top1.update(acc1[0], images[0].size(0))
+        top5.update(acc5[0], images[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -400,13 +395,13 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
-        # if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
-        #     global_step = i + epoch * (args.num_images // args.batch_size) / 4
-        #     writer.add_scalar('loss_fore', loss_fore.item(), global_step)
-        #     writer.add_scalar('loss_back', loss_back.item(), global_step)
-        #     writer.add_scalar('loss_seg', loss_seg.item(), global_step)
-        #     writer.add_scalar('acc1', acc1[0], global_step)
-        #     writer.add_scalar('acc5', acc5[0], global_step)
+        if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
+            global_step = i + epoch * (args.num_images // args.batch_size) / 4
+            writer.add_scalar('loss_fore', loss_fore.item(), global_step)
+            writer.add_scalar('loss_back', loss_back.item(), global_step)
+            writer.add_scalar('loss_seg', loss_seg.item(), global_step)
+            writer.add_scalar('acc1', acc1[0], global_step)
+            writer.add_scalar('acc5', acc5[0], global_step)
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
