@@ -90,22 +90,19 @@ class ASPPHead(BaseDecodeHead):
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
-        self.contrast_conv = nn.Sequential(
-            ConvModule(
-                1024,
-                1024,
-                1,
-                conv_cfg=self.conv_cfg,
-                # norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg),
-            # mind the act layer & BN
-            ConvModule(
-                1024,
-                128,
-                1,
-                conv_cfg=self.conv_cfg))
-                # norm_cfg=self.norm_cfg,
-                # act_cfg=self.act_cfg))
+        self.contrast_conv = nn.Sequential(nn.Conv2d(1024, 1024, 1), nn.ReLU(), nn.Conv2d(1024, 128, 1))
+        # self.contrast_conv = nn.Sequential(
+        #     ConvModule(
+        #         1024,
+        #         1024,
+        #         1,
+        #         conv_cfg=self.conv_cfg,
+        #         act_cfg=self.act_cfg),
+        #     ConvModule(
+        #         1024,
+        #         128,
+        #         1,
+        #         conv_cfg=self.conv_cfg))
 
     def forward(self, inputs):
         """Forward function."""
