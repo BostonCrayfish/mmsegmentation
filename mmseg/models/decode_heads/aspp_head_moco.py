@@ -84,13 +84,13 @@ class ASPPHead(BaseDecodeHead):
         self.bottleneck = ConvModule(
             (len(dilations) + 1) * self.channels,
             # self.channels,
-            1024,
+            512,
             3,
             padding=1,
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
-        self.contrast_conv = nn.Sequential(nn.Conv2d(1024, 1024, 1), nn.ReLU(), nn.Conv2d(1024, 128, 1))
+        self.contrast_conv = nn.Sequential(nn.Conv2d(512, 512, 1), nn.ReLU(), nn.Conv2d(512, 128, 1))
         # self.contrast_conv = nn.Sequential(
         #     ConvModule(
         #         1024,
