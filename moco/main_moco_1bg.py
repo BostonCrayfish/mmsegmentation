@@ -398,8 +398,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        # if i % args.print_freq == 0:
-        #     progress.display(i)
+        if i % args.print_freq == 0:
+            progress.display(i)
         # if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
         #     global_step = i + epoch * (args.num_images // args.batch_size) / 4
         #     writer.add_scalar('loss_fore', loss_fore.item(), global_step)
