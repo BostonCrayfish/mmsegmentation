@@ -346,6 +346,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
     # switch to train mode
     model.train()
+    target = torch.zeros(64, dtype=torch.long).cuda()
 
     end = time.time()
     for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
@@ -371,7 +372,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        output_fore, output_back, output_seg, target =\
+        output_fore, output_back, output_seg =\
             model(images[0], images[1], mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
 
         loss_fore = criterion(output_fore, target)

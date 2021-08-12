@@ -221,7 +221,7 @@ class MoCo(nn.Module):
         logits_seg /= self.T
 
         # labels: positive key indicators
-        labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
+        # labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
         # labels = torch.cuda.FloatTensor(logits_fore.shape[0]).long()
         print('line: 195, time: {}'.format(time.time() - end))
         end = time.time()
@@ -229,7 +229,7 @@ class MoCo(nn.Module):
         self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
         # self._dequeue_and_enqueue(k_pos)    # for moco_only baseline
         print('line: 200, time: {}'.format(time.time() - end))
-        return logits_fore, logits_fore, logits_seg, labels
+        return logits_fore, logits_fore, logits_seg
 
 
 # utils
