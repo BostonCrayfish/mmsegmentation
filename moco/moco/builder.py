@@ -137,9 +137,9 @@ class MoCo(nn.Module):
         # time.sleep(10)
 
         # mask_q dim=(1, 2)
-        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
+        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / (mask_q.sum(dim=(1, 2))).T + 1e-5)   # masked pooling
         q_pos = nn.functional.normalize(q_pos, dim=1)
-        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
+        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / ((1 - mask_q).sum(dim=(1, 2))).T + 1e-5)
         q_neg = nn.functional.normalize(q_neg, dim=1)
 
         # compute key features

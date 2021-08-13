@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_mlp as moco_builder
+from moco.moco import builder as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -369,8 +369,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #            for _ in range(batch_local * 2)]
         # mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
         # mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
-        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
-        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.3, 0.7), ratio=(0.3, 3.3), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.3, 0.7), ratio=(0.3, 3.3), value=1.)
         mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
         mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
 
