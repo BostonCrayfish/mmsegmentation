@@ -137,9 +137,11 @@ class MoCo(nn.Module):
         # time.sleep(10)
 
         # mask_q dim=(1, 2)
-        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / (mask_q.sum(dim=(1, 2))).T + 1e-5)   # masked pooling
+        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3))
+                 / (mask_q.sum(dim=(1, 2)) + 1e-5)).T   # masked pooling
         q_pos = nn.functional.normalize(q_pos, dim=1)
-        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / ((1 - mask_q).sum(dim=(1, 2))).T + 1e-5)
+        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3))
+                 / ((1 - mask_q).sum(dim=(1, 2)) + 1e-5)).T
         q_neg = nn.functional.normalize(q_neg, dim=1)
 
         # compute key features
@@ -154,15 +156,16 @@ class MoCo(nn.Module):
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
             ###
-            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
+            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3))
+                     / (mask_k.sum(dim=(1, 2)) + 1e-5)).T
             k_pos = nn.functional.normalize(k_pos, dim=1)
-            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
+            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3))
+                     / ((1 - mask_k).sum(dim=(1, 2)) + 1e-5)).T
             k_neg = nn.functional.normalize(k_neg, dim=1)
 
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
-        print(q_pos.shape, k_pos.shape)
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
         # negative logits: NxK (Nx(K+2)x196 in dense version)
         l_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
