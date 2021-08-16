@@ -31,7 +31,7 @@ from moco.moco import builder_1bg as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -144,8 +144,8 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
-    # ngpus_per_node = torch.cuda.device_count()
-    ngpus_per_node = 4
+    ngpus_per_node = torch.cuda.device_count()
+    # ngpus_per_node = 4
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -169,6 +169,9 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.device_name == 's2':
         data_dir = '/stor2/wangfeng/ImageNet'
         config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
+    elif args.device_name == 's5':
+        data_dir = '/stor1/user1/data/ImageNet'
+        config_dir = '/home/user1/mmsegmentation/configs/my_config'
     else:
         raise ValueError("missing data directory or unknown device")
 
@@ -347,8 +350,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     for i, ((images, _), (bgs, _)) in enumerate(zip(train_loader, train_loader_bg)):
         # measure data loading time
 
-        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
-        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.3, 0.7), ratio=(0.3, 3.3), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.3, 0.7), ratio=(0.3, 3.3), value=1.)
         mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
         mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
 

@@ -131,9 +131,9 @@ class MoCo(nn.Module):
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
 
-        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / mask_q.sum(dim=(1, 2))).T   # masked pooling
+        q_pos = (torch.mul(q.permute(1, 0, 2, 3), mask_q).sum(dim=(2, 3)) / (mask_q.sum(dim=(1, 2)) + 1e-5)).T   # masked pooling
         q_pos = nn.functional.normalize(q_pos, dim=1)
-        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / (1 - mask_q).sum(dim=(1, 2))).T
+        q_neg = (torch.mul(q.permute(1, 0, 2, 3), (1 - mask_q)).sum(dim=(2, 3)) / ((1 - mask_q).sum(dim=(1, 2)) + 1e-5)).T
         q_neg = nn.functional.normalize(q_neg, dim=1)
 
         # compute key features
@@ -146,9 +146,10 @@ class MoCo(nn.Module):
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
             ###
-            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / mask_k.sum(dim=(1, 2))).T
+            k_pos = (torch.mul(k.permute(1, 0, 2, 3), mask_k).sum(dim=(2, 3)) / (mask_k.sum(dim=(1, 2)) + 1e-5)).T
             k_pos = nn.functional.normalize(k_pos, dim=1)
-            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3)) / (1 - mask_k).sum(dim=(1, 2))).T
+            k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3))
+                     / ((1 - mask_k).sum(dim=(1, 2)) + 1e-5)).T
             k_neg = nn.functional.normalize(k_neg, dim=1)
 
         # compute logits
@@ -176,7 +177,6 @@ class MoCo(nn.Module):
 
         # labels: positive key indicators
         labels = torch.zeros(logits_fore.shape[0], dtype=torch.long).cuda()
-        # labels = torch.cuda.FloatTensor(logits_fore.shape[0]).long()
 
         # dequeue and enqueue
         self._dequeue_and_enqueue(torch.cat([k_pos, k_neg], dim=0))
