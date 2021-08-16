@@ -31,7 +31,7 @@ from moco.moco import builder as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -144,8 +144,8 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
-    # ngpus_per_node = torch.cuda.device_count()
-    ngpus_per_node = 4
+    ngpus_per_node = torch.cuda.device_count()
+    # ngpus_per_node = 4
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -169,6 +169,9 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.device_name == 's2':
         data_dir = '/stor2/wangfeng/ImageNet'
         config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
+    elif args.device_name == 's5':
+        data_dir = '/stor1/user1/data/ImageNet'
+        config_dir = '/home/user1/mmsegmentation/configs/my_config'
     else:
         raise ValueError("missing data directory or unknown device")
 
@@ -233,7 +236,10 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     # fix parameters in backbone
-    optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
+    # optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
 
@@ -394,7 +400,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         output_bank, output_loc, target = model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
         loss_moco = criterion(output_bank, target)
         loss_seg = criterion(output_loc, target)
-        loss = loss_moco + loss_seg
+        loss = loss_moco
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
