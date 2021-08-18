@@ -19,7 +19,7 @@ elif device_name == 's5':
 else:
     raise ValueError('Unknown device')
 
-pretrain_path = None
+pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1bg_0818.pth'
 
 model = dict(
     type='EncoderDecoder',
