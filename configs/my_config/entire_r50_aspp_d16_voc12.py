@@ -1,9 +1,9 @@
 # model settings
 
-norm_cfg = dict(type='SyncBN', requires_grad=True)
-# norm_cfg = dict(type='BN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
 
-device_name = 'ccvl8'
+device_name = 's5'
 if device_name == 'ccvl8':
     pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
     data_root = '/home/cwei/feng/data/VOC2012'
@@ -19,7 +19,7 @@ elif device_name == 's5':
 else:
     raise ValueError('Unknown device')
 
-pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1bg_0818.pth'
+pretrain_path = None
 
 model = dict(
     type='EncoderDecoder',
