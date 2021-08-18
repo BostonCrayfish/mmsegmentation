@@ -398,11 +398,11 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_k = image_k.permute(1, 0, 2, 3)
 
         # compute output
-        with autocast():
-            output_bank, output_loc, target = model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
-            loss_moco = criterion(output_bank, target)
-            loss_seg = criterion(output_loc, target)
-            loss = loss_moco
+        # with autocast():
+        output_bank, output_loc, target = model(image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+        loss_moco = criterion(output_bank, target)
+        loss_seg = criterion(output_loc, target)
+        loss = loss_moco
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
