@@ -32,7 +32,7 @@ from moco.moco import builder as moco_builder
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import autocast as autocast
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
