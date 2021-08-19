@@ -374,16 +374,24 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         # generate mask by RandomErasing
-        # batch_local = images[0].size(0)
-        # msk_gen = [transforms.RandomErasing(p=1., scale=(0.2, 0.5), ratio=(0.3, 3.3), value=1.)
-        #            for _ in range(batch_local * 2)]
-        # mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
-        # mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
-        #(0.5, 0.8)
-        msk_gen_q = transforms.RandomErasing(p=1., scale=(1., 1.), ratio=(0.3, 3.3), value=1.)
-        msk_gen_k = transforms.RandomErasing(p=1., scale=(1., 1.), ratio=(0.3, 3.3), value=1.)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
         mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
         mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
+        # make sure mask_q and mask_k are not zeros,
+        # due to sometimes RandomErasing yields zeros output
+        if mask_q.sum() == 0:
+            for retry in range(10):
+                msk_gen_q = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
+                mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))
+                if mask_q.sum() != 0:
+                    break
+        if mask_k.sum() == 0:
+            for retry in range(10):
+                msk_gen_k = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
+                mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
+                if mask_k.sum() != 0:
+                    break
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
