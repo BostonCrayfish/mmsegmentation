@@ -463,7 +463,7 @@ class ProgressMeter(object):
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
-        print('\t'.join(entries))
+        # print('\t'.join(entries))
         if torch.distributed.get_rank() == 0:
             logger_moco.info('\t'.join(entries))
 
