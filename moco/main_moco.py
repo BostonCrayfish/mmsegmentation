@@ -173,6 +173,9 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.device_name == 's5':
         data_dir = '/stor1/user1/data/ImageNet'
         config_dir = '/home/user1/mmsegmentation/configs/my_config'
+    elif args.device_name == 's6':
+        data_dir = '/sdb1/fidtqh2/data/ImageNet'
+        config_dir = '/home/fidtqh2/mmsegmentation/configs/my_config'
     else:
         raise ValueError("missing data directory or unknown device")
 
@@ -376,8 +379,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #            for _ in range(batch_local * 2)]
         # mask_q = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[0: batch_local]], dim=0)
         # mask_k = torch.cat([mi(torch.zeros(1, 224, 224)) for mi in msk_gen[batch_local:]], dim=0)
-        msk_gen_q = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.3, 3.3), value=1.)
-        msk_gen_k = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.3, 3.3), value=1.)
+        #(0.5, 0.8)
+        msk_gen_q = transforms.RandomErasing(p=1., scale=(1., 1.), ratio=(0.3, 3.3), value=1.)
+        msk_gen_k = transforms.RandomErasing(p=1., scale=(1., 1.), ratio=(0.3, 3.3), value=1.)
         mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))  # batch size
         mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
 
