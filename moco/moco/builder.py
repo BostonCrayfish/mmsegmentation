@@ -162,12 +162,7 @@ class MoCo(nn.Module):
             k_neg = (torch.mul(k.permute(1, 0, 2, 3), (1 - mask_k)).sum(dim=(2, 3))
                      / ((1 - mask_k).sum(dim=(1, 2)) + 1e-5)).T
             k_neg = nn.functional.normalize(k_neg, dim=1)
-        print(mask_q.sum().item(), mask_k.sum().item())
-        print('q_pos:', q_pos[0])
-        print('q_neg:', q_neg[0])
-        print('k_pos:', k_pos[0])
-        print('k_neg:', k_neg[0])
-        raise
+
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
