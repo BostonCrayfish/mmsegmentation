@@ -9,6 +9,7 @@ import shutil
 import time
 import warnings
 import logging
+import pickle
 
 import torch
 import torch.nn as nn
@@ -26,9 +27,10 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_mlp as moco_builder
+from moco.moco import builder as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast as autocast
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -142,6 +144,7 @@ def main():
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
     ngpus_per_node = torch.cuda.device_count()
+    # ngpus_per_node = 4
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -155,13 +158,28 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    if '/home/feng' in os.getcwd():
-        cfg = Config.fromfile('/home/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
-    elif '/home/cwei' in os.getcwd():
-        cfg = Config.fromfile('/home/cwei/feng/mmsegmentation/configs/my_config/entire_r50_aspp_d16_voc12.py')
+    # for ease running on different devices
+    if args.device_name == 'ccvl11':
+        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
+        config_dir = '/home/feng/mmsegmentation/configs/my_config'
+    elif args.device_name == 'ccvl8':
+        data_dir = '/home/cwei/feng/data/ImageNet'
+        config_dir = '/home/cwei/feng/mmsegmentation/configs/my_config'
+    elif args.device_name == 's2':
+        data_dir = '/stor2/wangfeng/ImageNet'
+        config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
+    elif args.device_name == 's5':
+        data_dir = '/stor1/user1/data/ImageNet'
+        config_dir = '/home/user1/mmsegmentation/configs/my_config'
+    elif args.device_name == 's6':
+        data_dir = '/sdb1/fidtqh2/data/ImageNet'
+        config_dir = '/home/fidtqh2/mmsegmentation/configs/my_config'
     else:
-        raise ValueError('unknown path for configuration')
+        raise ValueError("missing data directory or unknown device")
+
+    cfg = Config.fromfile(config_dir + '/entire_r50_aspp_d16_voc12.py')
     args.gpu = gpu
+    args.config_dir = config_dir
 
     # suppress printing if not master
     if args.multiprocessing_distributed and args.gpu != 0:
@@ -220,6 +238,9 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     # fix parameters in backbone
+    # optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -247,14 +268,6 @@ def main_worker(gpu, ngpus_per_node, args):
     # Data loading code
     # set different paths to data
     # for ease running on different devices
-    if args.device_name == 'ccvl11':
-        data_dir = '/export/ccvl11b/cwei/data/ImageNet'
-    elif args.device_name == 'ccvl8':
-        data_dir = '/home/cwei/feng/data/ImageNet'
-    elif args.device_name == None and args.data:
-        data_dir = args.data
-    else:
-        raise ValueError("missing data directory or unknown device")
     traindir = os.path.join(data_dir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

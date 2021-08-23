@@ -379,13 +379,13 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # make sure mask_q and mask_k are not zeros,
         # due to sometimes RandomErasing yields zeros output
         if mask_q.sum() == 0:
-            for retry in range(10):
+            for retry in range(100):
                 msk_gen_q = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
                 mask_q = msk_gen_q(torch.zeros(images[0].size(0), 224, 224))
                 if mask_q.sum() != 0:
                     break
         if mask_k.sum() == 0:
-            for retry in range(10):
+            for retry in range(100):
                 msk_gen_k = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
                 mask_k = msk_gen_k(torch.zeros(images[0].size(0), 224, 224))
                 if mask_k.sum() != 0:
