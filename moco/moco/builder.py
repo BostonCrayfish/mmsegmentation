@@ -179,7 +179,7 @@ class MoCo(nn.Module):
 
         # try dense loss
         # logits: Nx(1+K) add line 172
-        logits = torch.cat([l_pos, l_neg, l_neg_bg], dim=1)
+        logits = torch.cat([l_pos, l_neg], dim=1)
         # logits for backgrounds: Nx3
         logits_bg = torch.cat([l_pos, l_neg_bg], dim=1)
 
