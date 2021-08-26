@@ -9,8 +9,8 @@ if device_name == 'ccvl8':
     # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_0821.pth'
     data_root = '/home/cwei/feng/data/VOC2012'
 elif device_name == 'ccvl11':
-    # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
-    pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_0826.pth'
+    pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
+    # pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_0826.pth'
     data_root = '/export/ccvl11b/cwei/data/VOC2012'
 elif device_name == 's2':
     pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
@@ -44,7 +44,7 @@ model = dict(
         type='ASPPHead',
         in_channels=2048,
         in_index=3,
-        channels=512,
+        channels=256,
         dilations=(1, 6, 12, 18),
         dropout_ratio=0.1,
         num_classes=21,
