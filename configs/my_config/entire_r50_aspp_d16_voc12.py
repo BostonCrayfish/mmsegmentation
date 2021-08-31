@@ -25,6 +25,7 @@ else:
     raise ValueError('Unknown device')
 
 # pretrain_path = None
+channels = 256
 
 model = dict(
     type='EncoderDecoder',
@@ -44,7 +45,7 @@ model = dict(
         type='ASPPHead',
         in_channels=2048,
         in_index=3,
-        channels=256,
+        channels=channels,
         dilations=(1, 6, 12, 18),
         dropout_ratio=0.1,
         num_classes=21,

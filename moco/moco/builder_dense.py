@@ -132,8 +132,8 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        q_dense = q.view(q.shape[0], q.shape[1], -1)    # queries: NxCx196
-        mask_q = mask_q.view(-1)
+        q_dense = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
+        mask_q = mask_q.reshape(-1)
 
         # mask negative points in q_dense
         idx_qpos = torch.where(mask_q == 1)[0]
@@ -151,14 +151,14 @@ class MoCo(nn.Module):
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
-            k_dense = k.view(k.shape[0], k.shape[1], -1)    # keys: NxCx196
-            mask_k = mask_k.view(-1)
+            k_dense = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
+            mask_k = mask_k.reshape(-1)
             k_pos = k_dense[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
 
         # dense logits
         logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
-        logits_dense = logits_dense.view(logits_dense.shape[0], -1)
-        labels_dense = torch.einsum('x,y->xy', [torch.ones_like(idx_qpos), mask_k]).view(-1)
+        logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
+        labels_dense = torch.einsum('x,y->xy', [torch.ones_like(idx_qpos), mask_k]).reshape(-1)
         labels_dense /= labels_dense.sum()
 
         # moco logits
