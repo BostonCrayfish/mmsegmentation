@@ -177,9 +177,11 @@ class MoCo(nn.Module):
         l_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
         logits_moco = torch.cat([l_pos, l_neg], dim=1)
         labels_moco = torch.zeros(logits_moco.shape[0], dtype=torch.long).cuda()
-        print(logits_moco[0].detach())
+        # print(logits_moco[0].detach())
         # print('logits_moco shape: ', logits_moco.shape)
         # print('labels_moco shape: ', labels_moco.shape)
+        print(q_pos[0].detach())
+        print(k_pos[0].detach())
         time.sleep(3)
 
         # apply temperature
