@@ -132,14 +132,14 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        q_dense = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
+        q = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
         mask_q = mask_q.reshape(-1)
 
         # mask negative points in q_dense
         idx_qpos = torch.where(mask_q == 1)[0]
-        q_dense = q_dense[:, :, idx_qpos]
-        q_dense = nn.functional.normalize(q_dense, dim=1)
-        q_pos = q_dense.mean(dim=2)
+        q = q[:, :, idx_qpos]
+        q_dense = nn.functional.normalize(q, dim=1)
+        q_pos = nn.functional.normalize(q.mean(dim=2), dim=1)
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -152,10 +152,11 @@ class MoCo(nn.Module):
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
-            k_dense = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
-            k_dense = nn.functional.normalize(k_dense, dim=1)
+            k = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
+            k_dense = nn.functional.normalize(k, dim=1)
             mask_k = mask_k.reshape(-1)
-            k_pos = k_dense[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
+            k_pos = k[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
+            k_pos = nn.functional.normalize(k_pos)
 
         # dense logits
         logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
