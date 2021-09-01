@@ -411,6 +411,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # loss_dense = torch.mul(cre_dense(output_dense), target_dense).sum(dim=1).mean() * (-1)
         # dense loss of sigmoid
         output_dense = cre_dense(output_dense)
+        print(output_dense[0].detach())
+        print(target_dense.detach())
+        print(target_dense.mean().detach(), output_dense.mean().detach())
         loss_dense = torch.mul(torch.log(output_dense), target_dense) +\
                      torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         loss_dense = loss_dense.mean() * (-1)
