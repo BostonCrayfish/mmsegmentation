@@ -358,7 +358,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
-    cre_dense = nn.LogSoftmax(dim=1)
+    # cre_dense = nn.LogSoftmax(dim=1)
+    cre_dense = nn.Sigmoid()
 
     # switch to train mode
     model.train()
@@ -404,7 +405,16 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         output_moco, output_dense, target_moco, target_dense = model(
             image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
-        loss_dense = torch.mul(cre_dense(output_dense), target_dense).sum(dim=1).mean() * (-1)
+
+        # dense loss of softmax
+        # target_dense /= target_dense.sum()
+        # loss_dense = torch.mul(cre_dense(output_dense), target_dense).sum(dim=1).mean() * (-1)
+        # dense loss of sigmoid
+        output_dense = cre_dense(output_dense)
+        loss_dense = torch.mul(torch.log(output_dense), target_dense) +\
+                     torch.mul(torch.log(1. - output_dense), (1 - target_dense))
+        loss_dense = loss_dense.mean() * (-1)
+
         loss = loss_moco + loss_dense
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
