@@ -129,6 +129,7 @@ class MoCo(nn.Module):
         Output:
             logits, targets
         """
+        import time
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
@@ -139,6 +140,10 @@ class MoCo(nn.Module):
         idx_qpos = torch.where(mask_q == 1)[0]
         q_dense = q_dense[:, :, idx_qpos]
         q_pos = q_dense.mean(dim=2)
+        print('idx shape: ', idx_qpos.shape)
+        print('q_dense shape: ', q_dense.shape)
+        print('q_pos shape', q_pos.shape)
+        time.sleep(3)
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -154,18 +159,27 @@ class MoCo(nn.Module):
             k_dense = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
             mask_k = mask_k.reshape(-1)
             k_pos = k_dense[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
+            print('k_dense shape: ', k_dense.shape)
+            print('k_pos shape', k_pos.shape)
+            time.sleep(3)
 
         # dense logits
         logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
         logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
         labels_dense = torch.einsum('x,y->xy', [torch.ones_like(idx_qpos), mask_k]).reshape(-1)
         labels_dense /= labels_dense.sum()
+        print('logits_dense shape: ', logits_dense.shape)
+        print('labels_dense shape: ', labels_dense.shape)
+        time.sleep(3)
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
         l_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
         logits_moco = torch.cat([l_pos, l_neg], dim=1)
         labels_moco = torch.zeros(logits_moco.shape[0], dtype=torch.long).cuda()
+        print('logits_moco shape: ', logits_moco.shape)
+        print('labels_moco shape: ', labels_moco.shape)
+        time.sleep(3)
 
         # apply temperature
         logits_moco /= self.T
