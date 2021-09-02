@@ -358,8 +358,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, loss_m, loss_s, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
-    # cre_dense = nn.LogSoftmax(dim=1)
-    cre_dense = nn.Sigmoid()
+    cre_dense = nn.LogSoftmax(dim=1)
+    # cre_dense = nn.Sigmoid()
 
     # switch to train mode
     model.train()
