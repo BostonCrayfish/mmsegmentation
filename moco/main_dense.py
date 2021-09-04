@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense as moco_builder
+from moco.moco import builder_dense_mk as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
