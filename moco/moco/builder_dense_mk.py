@@ -170,7 +170,7 @@ class MoCo(nn.Module):
         logits_dense_0 = logits_dense_0.reshape(logits_dense_0.shape[0], -1)
         len_q_pos = idx_qpos.shape[0]
         idx_non_diag_q = torch.where(torch.eye(len_q_pos).view(-1) == 0)[0]
-        logits_dense_0 = logits_dense_0[idx_non_diag_q]
+        logits_dense_0 = logits_dense_0[:, idx_non_diag_q]
         logits_dense_1 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qneg], q_dense[:, :, idx_qpos]])
         logits_dense_1 = logits_dense_1.reshape(logits_dense_1.shape[0], -1)
         logits_dense = torch.cat([logits_dense_0, logits_dense_1], dim=1)
