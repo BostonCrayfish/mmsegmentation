@@ -138,6 +138,7 @@ class MoCo(nn.Module):
         # mask negative points in q_dense
         q_dense = nn.functional.normalize(q, dim=1)
         idx_qpos = torch.where(mask_q == 1)[0]
+        idx_qneg = torch.where(mask_q == 0)[0]
         q = q[:, :, idx_qpos]
         q_pos = nn.functional.normalize(q.mean(dim=2), dim=1)
 
@@ -165,9 +166,17 @@ class MoCo(nn.Module):
         # labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
 
         # dense logits q*q_pos
-        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, q_dense[:, :, idx_qpos]])
-        logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
-        labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_qpos)]).reshape(-1)
+        logits_dense_0 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qpos], q_dense[:, :, idx_qpos]])
+        logits_dense_0 = logits_dense_0.reshape(logits_dense_0.shape[0], -1)
+        len_q_pos = idx_qpos.shape[0]
+        idx_non_diag_q = torch.where(torch.eye(len_q_pos).view(-1) == 0)[0]
+        logits_dense_0 = logits_dense_0[idx_non_diag_q]
+        logits_dense_1 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qneg], q_dense[:, :, idx_qpos]])
+        logits_dense_1 = logits_dense_1.reshape(logits_dense_1.shape[0], -1)
+        logits_dense = torch.cat([logits_dense_0, logits_dense_1], dim=1)
+        labels_dense_0 = torch.ones(logits_dense_0.shape[1], dtype=torch.long)
+        labels_dense_1 = torch.zeros(logits_dense_1.shape[1], dtype=torch.long)
+        labels_dense = torch.cat([labels_dense_0, labels_dense_1])
 
 
         # moco logits
