@@ -350,12 +350,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     data_time = AverageMeter('Data', ':6.3f')
     loss_m = AverageMeter('Loss_moco', ':.4e')
     loss_s = AverageMeter('Loss_seg', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    acc_moco = AverageMeter('Acc_moco', ':6.2f')
+    acc_seg = AverageMeter('Acc_seg', ':6.2f')
     train_loader, train_loader_bg0, train_loader_bg1 = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, loss_m, loss_s, top1, top5],
+        [batch_time, data_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
     cre_dense = nn.LogSoftmax(dim=1)
@@ -407,8 +407,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
-        target_dense /= target_dense.sum()
-        loss_dense = torch.mul(cre_dense(output_dense), target_dense).sum(dim=1).mean() * (-1)
+        loss_dense = torch.mul(cre_dense(output_dense), target_dense)\
+                         .sum(dim=1).mean() / target_dense.sum() * (-1)
 
         # dense loss of sigmoid
         # output_dense = cre_dense(output_dense)
@@ -421,10 +421,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output_moco, target_moco, topk=(1, 5))
+        acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=1),
+                              target_dense).sum(dim=1).mean()
         loss_m.update(loss_moco.item(), images[0].size(0))
         loss_s.update(loss_dense.item(), images[0].size(0))
-        top1.update(acc1[0], images[0].size(0))
-        top5.update(acc5[0], images[0].size(0))
+        acc_moco.update(acc1[0], images[0].size(0))
+        acc_seg.update(acc_dense.item(), images[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
