@@ -408,7 +408,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # dense loss of softmax
         loss_dense = torch.mul(cre_dense(output_dense), target_dense)\
-                         .sum(dim=1).mean() / target_dense.sum() * (-1)
+                         .sum(dim=1).mean() / target_dense.sum() * (-5)
 
         # dense loss of sigmoid
         # output_dense = cre_dense(output_dense)
