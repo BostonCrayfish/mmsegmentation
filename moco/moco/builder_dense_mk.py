@@ -161,22 +161,22 @@ class MoCo(nn.Module):
             k_pos = nn.functional.normalize(k_pos)
 
         # dense logits
-        # logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
-        # logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
-        # labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
+        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
+        logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
+        labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
 
         # dense logits q*q_pos
-        logits_dense_0 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qpos], q_dense[:, :, idx_qpos]])
-        logits_dense_0 = logits_dense_0.reshape(logits_dense_0.shape[0], -1)
-        len_q_pos = idx_qpos.shape[0]
-        idx_non_diag_q = torch.where(torch.eye(len_q_pos).view(-1) == 0)[0]
-        logits_dense_0 = logits_dense_0[:, idx_non_diag_q]
-        logits_dense_1 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qneg], q_dense[:, :, idx_qpos]])
-        logits_dense_1 = logits_dense_1.reshape(logits_dense_1.shape[0], -1)
-        logits_dense = torch.cat([logits_dense_0, logits_dense_1], dim=1)
-        labels_dense_0 = torch.ones(logits_dense_0.shape[1], dtype=torch.long).cuda()
-        labels_dense_1 = torch.zeros(logits_dense_1.shape[1], dtype=torch.long).cuda()
-        labels_dense = torch.cat([labels_dense_0, labels_dense_1])
+        # logits_dense_0 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qpos], q_dense[:, :, idx_qpos]])
+        # logits_dense_0 = logits_dense_0.reshape(logits_dense_0.shape[0], -1)
+        # len_q_pos = idx_qpos.shape[0]
+        # idx_non_diag_q = torch.where(torch.eye(len_q_pos).view(-1) == 0)[0]
+        # logits_dense_0 = logits_dense_0[:, idx_non_diag_q]
+        # logits_dense_1 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qneg], q_dense[:, :, idx_qpos]])
+        # logits_dense_1 = logits_dense_1.reshape(logits_dense_1.shape[0], -1)
+        # logits_dense = torch.cat([logits_dense_0, logits_dense_1], dim=1)
+        # labels_dense_0 = torch.ones(logits_dense_0.shape[1], dtype=torch.long).cuda()
+        # labels_dense_1 = torch.zeros(logits_dense_1.shape[1], dtype=torch.long).cuda()
+        # labels_dense = torch.cat([labels_dense_0, labels_dense_1])
 
 
         # moco logits
