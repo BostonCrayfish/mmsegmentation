@@ -408,7 +408,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # dense loss of softmax
         loss_dense = torch.mul(cre_dense(output_dense), target_dense)\
-                         .sum(dim=1).mean() / target_dense.sum() * (-5)
+                         .sum(dim=1).mean() / target_dense.sum() * (-1)
 
         # dense loss of sigmoid
         # output_dense = cre_dense(output_dense)
@@ -416,7 +416,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #              torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         # loss_dense = loss_dense.mean() * (-10)
 
-        loss = loss_moco + loss_dense
+        loss = loss_dense
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
