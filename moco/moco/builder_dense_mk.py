@@ -166,10 +166,10 @@ class MoCo(nn.Module):
         labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
 
         #################
-        postives = torch.where(labels_dense == 1.)[0]
-        negatives = torch.where(labels_dense == 0.)[0]
-        print(logits_dense[0, postives].mean().detach())
-        print(logits_dense[0, negatives].mean().detach())
+        # postives = torch.where(labels_dense == 1.)[0]
+        # negatives = torch.where(labels_dense == 0.)[0]
+        # print(logits_dense[0, postives].mean().detach())
+        # print(logits_dense[0, negatives].mean().detach())
 
         # dense logits q*q_pos
         # logits_dense_0 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qpos], q_dense[:, :, idx_qpos]])
