@@ -167,7 +167,9 @@ class MoCo(nn.Module):
 
         #################
         postives = torch.where(labels_dense == 1.)[0]
-        print(logits_dense[0, postives[0:10]].detach())
+        negatives = torch.where(labels_dense == 0.)[0]
+        print(logits_dense[0, postives].mean().detach())
+        print(logits_dense[0, negatives].mean().detach())
 
         # dense logits q*q_pos
         # logits_dense_0 = torch.einsum('ncx,ncy->nxy', [q_dense[:, :, idx_qpos], q_dense[:, :, idx_qpos]])
@@ -191,7 +193,7 @@ class MoCo(nn.Module):
 
         # apply temperature
         logits_moco /= self.T
-        logits_dense /= .000001
+        # logits_dense
 
         # dequeue and enqueue
         self._dequeue_and_enqueue(k_pos)
