@@ -9,7 +9,6 @@ import shutil
 import time
 import warnings
 import logging
-import pickle
 
 import torch
 import torch.nn as nn
@@ -29,8 +28,8 @@ from mmcv.utils import Config
 from moco.moco import loader as moco_loader
 from moco.moco import builder as moco_builder
 
-from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast as autocast
+# from torch.utils.tensorboard import SummaryWriter
+# from torch.cuda.amp import autocast as autocast
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -44,7 +43,7 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
-writer = SummaryWriter('./log')
+# writer = SummaryWriter('./log')
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR',
@@ -399,12 +398,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
-        if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
-            global_step = i + epoch * (args.num_images // args.batch_size) / 4
-            writer.add_scalar('loss_moco', loss_moco.item(), global_step)
-            writer.add_scalar('loss_seg', loss_seg.item(), global_step)
-            writer.add_scalar('acc1', acc1[0], global_step)
-            writer.add_scalar('acc5', acc5[0], global_step)
+        # if i % args.scalar_freq == 0 and torch.distributed.get_rank() == 0:
+        #     global_step = i + epoch * (args.num_images // args.batch_size) / 4
+        #     writer.add_scalar('loss_moco', loss_moco.item(), global_step)
+        #     writer.add_scalar('loss_seg', loss_seg.item(), global_step)
+        #     writer.add_scalar('acc1', acc1[0], global_step)
+        #     writer.add_scalar('acc5', acc5[0], global_step)
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
