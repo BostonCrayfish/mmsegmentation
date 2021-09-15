@@ -161,9 +161,9 @@ class MoCo(nn.Module):
             k_pos = nn.functional.normalize(k_pos)
 
         # dense logits
-        logits_dense = torch.einsum('ncx,ncy->nyx', [q_dense, k_dense])
+        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
         # logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
-        labels_dense = torch.einsum('x,y->yx', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
+        labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
 
         #################
         # postives = torch.where(labels_dense == 1.)[0]
