@@ -418,7 +418,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #              torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         # loss_dense = loss_dense.mean() * (-10)
 
-        loss = loss_moco + loss_dense
+        loss = loss_moco
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
