@@ -193,7 +193,7 @@ class MoCo(nn.Module):
 
         # apply temperature
         logits_moco /= self.T
-        # logits_dense
+        logits_dense /= 2.
 
         # dequeue and enqueue
         self._dequeue_and_enqueue(k_pos)
