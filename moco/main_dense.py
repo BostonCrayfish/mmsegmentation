@@ -406,11 +406,6 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
 
-        # debug
-        print(output_dense.shape)
-        print('----------------------------------')
-        ################
-
         # dense loss of softmax
         output_dense = (-1.) * cre_dense(output_dense)
         output_dense = output_dense.reshape(output_dense.shape[0], -1)
