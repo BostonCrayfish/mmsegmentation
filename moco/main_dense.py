@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense_mk as moco_builder
+from moco.moco import builder_dense as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -418,7 +418,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #              torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         # loss_dense = loss_dense.mean() * (-10)
 
-        loss = loss_moco + 0.2 * loss_dense
+        loss = loss_dense
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
