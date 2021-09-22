@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense as moco_builder
+from moco.moco import builder_dense_ex as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -358,7 +358,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    cre_dense = nn.LogSoftmax(dim=1)
+    cre_dense = nn.LogSoftmax(dim=2)
     # cre_dense = nn.Sigmoid()
 
     # switch to train mode
@@ -408,8 +408,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # dense loss of softmax
         output_dense_log = (-1.) * cre_dense(output_dense)
-        output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
-        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
+        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
+        # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
+        # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
         # dense loss of sigmoid
         # output_dense = output_dense * 2 - 1.
