@@ -30,6 +30,7 @@ from moco.moco import loader as moco_loader
 from moco.moco import builder_dense_ex as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast as autocast
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -407,8 +408,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
-        output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
-        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
+        with autocast():
+            output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
+            loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
