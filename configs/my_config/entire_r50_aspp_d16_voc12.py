@@ -20,8 +20,8 @@ elif device_name == 's5':
     pretrain_path = '/home/user1/work_place/checkpoints/moco_r50_200ep_trans.pth'
     data_root = '/stor1/user1/data/VOC2012'
 elif device_name == 's6':
-    # pretrain_path = None
-    pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_0922.pth'
+    pretrain_path = None
+    # pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_0922.pth'
     data_root = '/sdb1/fidtqh2/data/VOC2012'
 else:
     raise ValueError('Unknown device')
