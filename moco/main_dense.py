@@ -403,15 +403,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_k = images[1] * mask_k + bg1 * (1 - mask_k)
 
         # compute output
-        with autocast():
-            output_moco, output_dense, target_moco, target_dense = model(
-                image_q, image_k, torch.ones(14, 14).cuda(), mask_k[8::16, 8::16])
-            loss_moco = criterion(output_moco, target_moco)
+        # with autocast():
+        output_moco, output_dense, target_moco, target_dense = model(
+            image_q, image_k, torch.ones(14, 14).cuda(), mask_k[8::16, 8::16])
+        loss_moco = criterion(output_moco, target_moco)
 
-            # dense loss of softmax
+        # dense loss of softmax
 
-            output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
-            loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
+        output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
+        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
