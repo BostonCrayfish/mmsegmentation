@@ -407,7 +407,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
-        output_dense_log = (-1.) * cre_dense(output_dense)
+        output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
         loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
@@ -424,7 +424,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output_moco, target_moco, topk=(1, 5))
-        acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=2),
+        acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=2)[:, :, 0:196],
                               target_dense).sum(dim=2).mean() * 100
         loss_m.update(loss_moco.item(), images[0].size(0))
         loss_s.update(loss_dense.item(), images[0].size(0))

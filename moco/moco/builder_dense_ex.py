@@ -162,7 +162,8 @@ class MoCo(nn.Module):
         logits_dense_key = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
         logits_dense_queque = torch.einsum('ncx,ck->nxk', [q_dense, self.queue.clone().detach()])
         logits_dense = torch.cat([logits_dense_key, logits_dense_queque], dim=2)
-        labels_dense = torch.cat([mask_k, torch.zeros(self.K).cuda()])
+        # labels_dense = torch.cat([mask_k, torch.zeros(self.K).cuda()])
+        labels_dense = mask_k
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
