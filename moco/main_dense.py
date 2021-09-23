@@ -403,7 +403,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # compute output
         output_moco, output_dense, target_moco, target_dense = model(
-            image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
+            image_q, image_k, torch.ones(14, 14).cuda(), mask_k[8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
