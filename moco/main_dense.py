@@ -429,7 +429,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output_moco, target_moco, topk=(1, 5))
         acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=2)[:, :, 0:196],
-                              target_dense).sum(dim=2).mean() * 100
+                              target_dense).sum(dim=2)
+        acc_dense = (torch.mul(acc_dense, mask_dense).sum(dim=1) / mask_dense.sum()).mean() * 100.
         loss_m.update(loss_moco.item(), images[0].size(0))
         loss_s.update(loss_dense.item(), images[0].size(0))
         acc_moco.update(acc1[0], images[0].size(0))
