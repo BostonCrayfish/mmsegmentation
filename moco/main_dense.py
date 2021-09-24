@@ -404,18 +404,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         # compute output
         # with autocast():
-        if True:
-            output_moco, output_dense, target_moco, target_dense = model(
-                image_q, image_k, torch.ones(14, 14).cuda(), mask_k[8::16, 8::16])
-        else:
-            output_moco, output_dense, target_moco, target_dense = model(
-                image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
+        output_moco, output_dense, target_moco, target_dense, mask_dense = model(
+            image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
-
         output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
-        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=2).mean() / target_dense.sum()
+        loss_dense_unmasked = torch.mul(output_dense_log, target_dense).sum(dim=2) / target_dense.sum()
+        loss_dense_masked = torch.mul(loss_dense_unmasked, mask_dense).sum(dim=1) / mask_dense.sum()
+        loss_dense = loss_dense_masked.mean()
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 

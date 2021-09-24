@@ -129,17 +129,16 @@ class MoCo(nn.Module):
         Output:
             logits, targets
         """
+        mask_q = mask_q.reshape(-1)
+        mask_k = mask_k.reshape(-1)
+        idx_qpos = torch.where(mask_q == 1)[0]
+        idx_kpos = torch.where(mask_k == 1)[0]
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
         q = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
-        mask_q = mask_q.reshape(-1)
-
-        # mask negative points in q_dense
-        idx_qpos = torch.where(mask_q == 1)[0]
-        q = q[:, :, idx_qpos]
         q_dense = nn.functional.normalize(q, dim=1)
-        q_pos = nn.functional.normalize(q.mean(dim=2), dim=1)
+        q_pos = nn.functional.normalize(q[:, :, idx_qpos].mean(dim=2), dim=1)
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -154,9 +153,7 @@ class MoCo(nn.Module):
 
             k = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
             k_dense = nn.functional.normalize(k, dim=1)
-            mask_k = mask_k.reshape(-1)
-            k_pos = k[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
-            k_pos = nn.functional.normalize(k_pos, dim=1)
+            k_pos = nn.functional.normalize(k[:, :, idx_kpos].mean(dim=2), dim=1)
 
         # dense logits
         logits_dense_key = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])
@@ -164,6 +161,7 @@ class MoCo(nn.Module):
         logits_dense = torch.cat([logits_dense_key, logits_dense_queque], dim=2)
         # labels_dense = torch.cat([mask_k, torch.zeros(self.K).cuda()])
         labels_dense = mask_k
+        mask_dense = mask_q
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
@@ -178,7 +176,7 @@ class MoCo(nn.Module):
         # dequeue and enqueue
         self._dequeue_and_enqueue(k_pos)
 
-        return logits_moco, logits_dense, labels_moco, labels_dense
+        return logits_moco, logits_dense, labels_moco, labels_dense, mask_dense
 
 
 # utils
