@@ -83,16 +83,16 @@ class ASPPHead(BaseDecodeHead):
             act_cfg=self.act_cfg)
         self.bottleneck = ConvModule(
             (len(dilations) + 1) * self.channels,
-            self.channels,
+            2048,
             3,
             padding=1,
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
         self.contrast_conv = nn.Sequential(
-            nn.Conv2d(self.channels, self.channels, 1),
+            nn.Conv2d(2048, 2048, 1),
             nn.ReLU(),
-            nn.Conv2d(self.channels, 128, 1))
+            nn.Conv2d(2048, 128, 1))
 
     def forward(self, inputs):
         """Forward function."""
