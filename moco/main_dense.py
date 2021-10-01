@@ -407,19 +407,18 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         loss_moco = criterion(output_moco, target_moco)
 
         # pairwise dense loss
-        # output_dense_exp = torch.exp(output_dense).reshape(output_dense.shape[0], -1)
-        idx_pos = torch.where(target_dense == 1)[0]
-        idx_neg = torch.where(target_dense == 0)[0]
-        output_flat = output_dense.reshape(output_dense.shape[0], -1)
-        output_flat[:, idx_pos] *= -1.
-        output_dense_exp = torch.exp(output_flat)
-        loss_dense = torch.log(
-            1. + output_dense_exp[:, idx_pos].sum(dim=1) * output_dense_exp[:, idx_neg].sum(dim=1)).mean()
+        # idx_pos = torch.where(target_dense == 1)[0]
+        # idx_neg = torch.where(target_dense == 0)[0]
+        # output_flat = output_dense.reshape(output_dense.shape[0], -1)
+        # output_flat[:, idx_pos] *= -1.
+        # output_dense_exp = torch.exp(output_flat)
+        # loss_dense = torch.log(
+        #     1. + output_dense_exp[:, idx_pos].sum(dim=1) * output_dense_exp[:, idx_neg].sum(dim=1)).mean()
 
         # dense loss of softmax
-        # output_dense_log = (-1.) * cre_dense(output_dense)
-        # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
-        # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
+        output_dense_log = (-1.) * cre_dense(output_dense)
+        output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
+        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
         # dense loss of sigmoid
         # output_dense = output_dense * 2 - 1.
