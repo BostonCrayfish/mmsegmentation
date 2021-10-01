@@ -27,9 +27,10 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense as moco_builder
+from moco.moco import builder_dense_ex as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast as autocast
 
 logger_moco = logging.getLogger(__name__)
 logger_moco.setLevel(level=logging.INFO)
@@ -358,7 +359,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    cre_dense = nn.LogSoftmax(dim=1)
+    cre_dense = nn.LogSoftmax(dim=2)
     # cre_dense = nn.Sigmoid()
 
     # switch to train mode
@@ -402,22 +403,16 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         image_k = images[1] * mask_k + bg1 * (1 - mask_k)
 
         # compute output
-        output_moco, output_dense, target_moco, target_dense = model(
+        # with autocast():
+        output_moco, output_dense, target_moco, target_dense, mask_dense = model(
             image_q, image_k, mask_q[8::16, 8::16], mask_k[8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
 
-        # pairwise dense loss
-        # output_dense_exp = torch.exp(output_dense).reshape(output_dense.shape[0], -1)
-        idx_pos = torch.where(target_dense == 1)[0]
-        idx_neg = torch.where(target_dense == 0)[0]
-        output_flat = output_dense.reshape(output_dense.shape[0], -1)
-        output_flat[:, idx_pos] *= -1.
-        output_dense_exp = torch.exp(output_flat)
-        loss_dense = torch.log(
-            1. + output_dense_exp[:, idx_pos].sum(dim=1) * output_dense_exp[:, idx_neg].sum(dim=1)).mean()
-
         # dense loss of softmax
-        # output_dense_log = (-1.) * cre_dense(output_dense)
+        output_dense_log = (-1.) * cre_dense(output_dense)[:, :, 0:196]
+        loss_dense_unmasked = torch.mul(output_dense_log, target_dense).sum(dim=2) / target_dense.sum()
+        loss_dense_masked = torch.mul(loss_dense_unmasked, mask_dense).sum(dim=1) / mask_dense.sum()
+        loss_dense = loss_dense_masked.mean()
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
@@ -428,13 +423,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #              torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         # loss_dense = loss_dense.mean() * (-10)
 
-        loss = loss_moco + loss_dense
+        loss = loss_dense
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output_moco, target_moco, topk=(1, 5))
-        acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=1).reshape(output_dense.shape[0], -1),
-                              target_dense).sum(dim=1).mean()
+        acc_dense = torch.mul(nn.functional.softmax(output_dense, dim=2)[:, :, 0:196],
+                              target_dense).sum(dim=2)
+        acc_dense = (torch.mul(acc_dense, mask_dense).sum(dim=1) / mask_dense.sum()).mean() * 100.
         loss_m.update(loss_moco.item(), images[0].size(0))
         loss_s.update(loss_dense.item(), images[0].size(0))
         acc_moco.update(acc1[0], images[0].size(0))
