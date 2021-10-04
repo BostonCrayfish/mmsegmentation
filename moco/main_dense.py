@@ -423,6 +423,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             1. + (output_dense_exp * target_dense_m).sum(dim=1) *
             (output_dense_exp * (1. - target_dense_m)).sum(dim=1)).mean()
 
+
         # dense loss of softmax
         # output_dense_log = (-1.) * cre_dense(output_dense)
         # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
