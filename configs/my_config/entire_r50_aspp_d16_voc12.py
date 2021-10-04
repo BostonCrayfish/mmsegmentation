@@ -1,7 +1,7 @@
 # model settings
 
-norm_cfg = dict(type='SyncBN', requires_grad=True)
-# norm_cfg = dict(type='BN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
 
 device_name = 'ccvl8'
 if device_name == 'ccvl8':

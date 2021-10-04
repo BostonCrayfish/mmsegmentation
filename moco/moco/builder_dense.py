@@ -130,38 +130,33 @@ class MoCo(nn.Module):
             logits, targets
         """
 
+        mask_q = mask_q.reshape(-1)
+        mask_k = mask_k.reshape(-1)
+        idx_qpos = torch.where(mask_q == 1)[0]
+        idx_kpos = torch.where(mask_k == 1)[0]
+
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
         q = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
-        mask_q = mask_q.reshape(-1)
-
-        # mask negative points in q_dense
-        idx_qpos = torch.where(mask_q == 1)[0]
-        q = q[:, :, idx_qpos]
-        q_dense = nn.functional.normalize(q, dim=1)
-        q_pos = nn.functional.normalize(q.mean(dim=2), dim=1)
+        q_dense = nn.functional.normalize(q, dim=1)  # NxCx196
+        q_pos = nn.functional.normalize(q[:, :, idx_qpos].mean(dim=2), dim=1)   # NxC
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
             self._momentum_update_key_encoder()  # update the key encoder
-
             # shuffle for making use of BN
             im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
-
             k = self.encoder_k(im_k)  # keys: NxC
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
             k = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
-            k_dense = nn.functional.normalize(k, dim=1)
-            mask_k = mask_k.reshape(-1)
-            k_pos = k[:, :, torch.where(mask_k == 1)[0]].mean(dim=2)
-            k_pos = nn.functional.normalize(k_pos, dim=1)
+            k_dense = nn.functional.normalize(k[:, :, idx_kpos], dim=1)     # NxCx120
+            k_pos = nn.functional.normalize(k[:, :, idx_kpos].mean(dim=2), dim=1)   # NxC
 
         # dense logits
-        logits_dense = torch.einsum('ncx,ncy->nyx', [q_dense, k_dense])
-        # logits_dense = logits_dense.reshape(logits_dense.shape[0], -1)
-        labels_dense = torch.einsum('x,y->yx', [torch.ones_like(idx_qpos), mask_k]).reshape(-1)
+        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #NxRqxRk
+        labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
@@ -171,7 +166,7 @@ class MoCo(nn.Module):
 
         # apply temperature
         logits_moco /= self.T
-        logits_dense /= self.T
+        # logits_dense /= self.T
 
         # dequeue and enqueue
         self._dequeue_and_enqueue(k_pos)
