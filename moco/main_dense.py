@@ -410,7 +410,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         idx_pos = torch.where(target_dense == 1)[0]
         idx_neg = torch.where(target_dense == 0)[0]
         output_flat = output_dense.reshape(output_dense.shape[0], -1)
-        output_flat[:, idx_pos] *= -1.
+        # output_flat[:, idx_pos] *= -1.
+        output_flat = output_flat * (target_dense.float() * (-2.) + 1.)
         output_dense_exp = torch.exp(output_flat)
         loss_dense = torch.log(
             1. + output_dense_exp[:, idx_pos].sum(dim=1) * output_dense_exp[:, idx_neg].sum(dim=1)).mean()
