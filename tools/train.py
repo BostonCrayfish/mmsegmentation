@@ -141,7 +141,8 @@ def main():
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
 
-    print(model.decode_head.con_seg)
+    print(model.decode_head.conv_seg)
+    raise
 
     logger.info(model)
 
