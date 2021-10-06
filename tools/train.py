@@ -141,6 +141,8 @@ def main():
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
 
+    print(model)
+
     logger.info(model)
 
     datasets = [build_dataset(cfg.data.train)]
