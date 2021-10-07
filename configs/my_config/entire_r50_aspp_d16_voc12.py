@@ -13,8 +13,8 @@ elif device_name == 'ccvl11':
     # pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_1006.pth'
     data_root = '/export/ccvl11b/cwei/data/VOC2012'
 elif device_name == 's2':
-    pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
-    # pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/sss/sss_0918.pth'
+    # pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
+    pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/sss/sss_1007.pth'
     data_root = '/stor2/wangfeng/VOC2012'
 elif device_name == 's5':
     pretrain_path = '/home/user1/work_place/checkpoints/moco_r50_200ep_trans.pth'
