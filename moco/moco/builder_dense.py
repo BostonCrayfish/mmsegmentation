@@ -155,8 +155,12 @@ class MoCo(nn.Module):
             k_pos = nn.functional.normalize(k[:, :, idx_kpos].mean(dim=2), dim=1)   # NxC
 
         # dense logits
-        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #NxRqxRk
-        labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
+        # logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #NxRqxRk
+        # labels_dense = torch.einsum('x,y->xy', [mask_q, torch.ones_like(idx_kpos)]).reshape(-1)
+
+        # dense losits with k_pos_avg
+        logits_dense = torch.einsum('ncx,nc->nx', [q_dense, k_pos])  # Nx196
+        labels_dense = mask_q
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
