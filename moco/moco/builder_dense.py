@@ -139,7 +139,11 @@ class MoCo(nn.Module):
         q = self.encoder_q(im_q)  # queries: NxC
         q = q.reshape(q.shape[0], q.shape[1], -1)    # queries: NxCx196
         q_dense = nn.functional.normalize(q, dim=1)  # NxCx196
-        q_pos = nn.functional.normalize(q[:, :, idx_qpos].mean(dim=2), dim=1)   # NxC
+
+        # one stage normalize
+        # q_pos = nn.functional.normalize(q[:, :, idx_qpos].mean(dim=2), dim=1)   # NxC
+        # two-stage normalize
+        q_pos = nn.functional.normalize(q_dense[:, :, idx_qpos].mean(dim=2), dim=1)  # NxC
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -152,7 +156,11 @@ class MoCo(nn.Module):
 
             k = k.reshape(k.shape[0], k.shape[1], -1)    # keys: NxCx196
             k_dense = nn.functional.normalize(k[:, :, idx_kpos], dim=1)     # NxCx120
-            k_pos = nn.functional.normalize(k[:, :, idx_kpos].mean(dim=2), dim=1)   # NxC
+
+            # one-stage normalize
+            # k_pos = nn.functional.normalize(k[:, :, idx_kpos].mean(dim=2), dim=1)   # NxC
+            # two-stage normalize
+            k_pos = nn.functional.normalize(k_dense.mean(dim=2), dim=1)  # NxC
 
         # dense logits
         # logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #NxRqxRk

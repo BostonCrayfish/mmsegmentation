@@ -424,8 +424,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #     (output_dense_exp * (1. - target_dense_m)).sum(dim=1)).mean()
 
         # dense loss of softmax
-        # output_dense_log = (-1.) * cre_dense(output_dense.reshape(output_dense.shape[0], -1))
-        # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
+        output_dense_log = (-1.) * cre_dense(output_dense.reshape(output_dense.shape[0], -1))
+        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
         # dense loss of softmax, short
         # output_dense_log = (-1.) * cre_dense(output_dense)
@@ -433,8 +433,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
         # dense loss of softmax, k_pos_avg
-        output_dense_log = (-1.) * cre_dense(output_dense)
-        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
+        # output_dense_log = (-1.) * cre_dense(output_dense)
+        # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum()
 
         # dense loss of sigmoid
         # output_dense = output_dense * 2 - 1.
