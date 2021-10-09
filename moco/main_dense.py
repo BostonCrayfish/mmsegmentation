@@ -415,17 +415,17 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #     1. + output_dense_exp[:, idx_pos].sum(dim=1) * output_dense_exp[:, idx_neg].sum(dim=1)).mean()
 
         # pairwise dense loss, short
-        # output_flat = output_dense.reshape(output_dense.shape[0], -1)
-        # output_dense_exp = torch.exp(output_flat * (target_dense.float() * (-2.) + 1.))
-        # output_dense_exp = output_dense_exp.reshape(output_dense_exp.shape[0], 196, -1)
-        # target_dense_m = target_dense.reshape(196, -1)
-        # loss_dense = torch.log(
-        #     1. + (output_dense_exp * target_dense_m).sum(dim=1) *
-        #     (output_dense_exp * (1. - target_dense_m)).sum(dim=1)).mean()
+        output_flat = output_dense.reshape(output_dense.shape[0], -1)
+        output_dense_exp = torch.exp(output_flat * (target_dense.float() * (-2.) + 1.))
+        output_dense_exp = output_dense_exp.reshape(output_dense_exp.shape[0], 196, -1)
+        target_dense_m = target_dense.reshape(196, -1)
+        loss_dense = torch.log(
+            1. + (output_dense_exp * target_dense_m).sum(dim=1) *
+            (output_dense_exp * (1. - target_dense_m)).sum(dim=1)).mean() * .1
 
         # dense loss of softmax
-        output_dense_log = (-1.) * cre_dense(output_dense.reshape(output_dense.shape[0], -1))
-        loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum() * 0.1
+        # output_dense_log = (-1.) * cre_dense(output_dense.reshape(output_dense.shape[0], -1))
+        # loss_dense = torch.mul(output_dense_log, target_dense).sum(dim=1).mean() / target_dense.sum() * .1
 
         # dense loss of softmax, short
         # output_dense_log = (-1.) * cre_dense(output_dense)
