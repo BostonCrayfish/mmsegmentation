@@ -1,9 +1,9 @@
 # model settings
 
-norm_cfg = dict(type='SyncBN', requires_grad=True)
-# norm_cfg = dict(type='BN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
 
-device_name = 'ccvl8'
+device_name = 's6'
 if device_name == 'ccvl8':
     # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
     pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1009.pth'
@@ -21,14 +21,14 @@ elif device_name == 's5':
     data_root = '/stor1/user1/data/VOC2012'
 elif device_name == 's6':
     # pretrain_path = None
-    # pretrain_path = '/sdb1/fidtqh2/work_place/sss/moco_r50_200ep_trans.pth'
-    pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_1009.pth'
+    pretrain_path = '/sdb1/fidtqh2/work_place/sss/moco_r50_200ep_trans.pth'
+    # pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_1009.pth'
     data_root = '/sdb1/fidtqh2/data/VOC2012'
 else:
     raise ValueError('Unknown device')
 
 # pretrain_path = None
-channels = 512
+channels = 256
 
 model = dict(
     type='EncoderDecoder',
