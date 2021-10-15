@@ -166,16 +166,16 @@ class MoCo(nn.Module):
             # k_pos = nn.functional.normalize(k_dense.mean(dim=2), dim=1)  # NxC
 
         # dense logits
-        logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #Nx196x196
-        labels_dense = torch.einsum('nx,ny->nxy', [mask_q, mask_k])
-        labels_dense = labels_dense.reshape(labels_dense.shape[0], -1)
-        mask_dense = torch.einsum('x,ny->nxy', [torch.ones(196).cuda(), mask_k])
-        mask_dense = mask_dense.reshape(mask_dense.shape[0], -1)
+        # logits_dense = torch.einsum('ncx,ncy->nxy', [q_dense, k_dense])     #Nx196x196
+        # labels_dense = torch.einsum('nx,ny->nxy', [mask_q, mask_k])
+        # labels_dense = labels_dense.reshape(labels_dense.shape[0], -1)
+        # mask_dense = torch.einsum('x,ny->nxy', [torch.ones(196).cuda(), mask_k])
+        # mask_dense = mask_dense.reshape(mask_dense.shape[0], -1)
 
         # dense losits with k_pos_avg
-        # logits_dense = torch.einsum('ncx,nc->nx', [q_dense, k_pos])  # Nx196
-        # labels_dense = mask_q
-        # mask_dense = torch.tensor(1.).cuda()    # no logit masked
+        logits_dense = torch.einsum('ncx,nc->nx', [q_dense, k_pos])  # Nx196
+        labels_dense = mask_q
+        mask_dense = torch.tensor(1.).cuda()    # no logit masked
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
