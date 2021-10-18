@@ -28,7 +28,7 @@ else:
     raise ValueError('Unknown device')
 
 # pretrain_path = None
-channels = 256
+channels = 512
 
 model = dict(
     type='EncoderDecoder',
