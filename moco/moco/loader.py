@@ -57,6 +57,8 @@ class FixCrop(torch.nn.Module):
         self.seed_idx = (self.seed_idx + 1) % self.seed_length
         torch.manual_seed(random_seed)
 
+        # print(img)
+
         width, height = F._get_image_size(img)
         area = height * width
 
