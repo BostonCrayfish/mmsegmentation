@@ -377,12 +377,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     for img0, img1 in zip(train_loader, train_loader_mask):
         img0, img1 = img0[0][0], img1[0][0]
         img1 = img1[1, :, :, :]
-        img1 = ((img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)) > 0.5).float().sum(dim=0).numpy()
+        img1 = (img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)).sum(dim=0).numpy()
         import numpy as np
         import matplotlib.pyplot as plt
-        locs = np.where(img1 == 1)
-        plt.scatter(locs[0], locs[1])
-        plt.scatter(np.where(img1==0)[0], np.where(img1==0)[1])
+        locs_1 = np.where(img1 > 0.5)
+        locs_0 = np.where(img1 < 0.5)
+
+        plt.scatter(locs_0[0], locs_0[1])
+        plt.scatter(locs_1[0], locs_1[1])
         plt.savefig('./mask.png')
 
         raise
