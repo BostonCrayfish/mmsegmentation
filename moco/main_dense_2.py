@@ -27,7 +27,7 @@ import torchvision.models as models
 from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense_1 as moco_builder
+from moco.moco import builder_dense_2 as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -368,26 +368,25 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     loss_s = AverageMeter('Loss_seg', ':.4e')
     acc_moco = AverageMeter('Acc_moco', ':6.2f')
     acc_seg = AverageMeter('Acc_seg', ':6.2f')
-    train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask = train_loader_list
+    # train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask = train_loader_list
     progress = ProgressMeter(
-        len(train_loader),
+        len(train_loader_list[0]),
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    for img0, img1 in zip(train_loader, train_loader_mask):
-        img0, img1 = img0[0][0], img1[0][0]
-        img1 = img1[1, :, :, :]
-        img1 = (img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)).sum(dim=0).numpy()
-        import numpy as np
-        import matplotlib.pyplot as plt
-        locs_1 = np.where(img1 > 0.5)
-        locs_0 = np.where(img1 < 0.5)
-
-        plt.scatter(locs_0[0], locs_0[1])
-        plt.scatter(locs_1[0], locs_1[1], c='red')
-        plt.savefig('./mask.png')
-
-        raise
+    # for img0, img1 in zip(train_loader, train_loader_mask):
+    #     img0, img1 = img0[0][0], img1[0][0]
+    #     img1 = img1[1, :, :, :]
+    #     img1 = (img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)).sum(dim=0).numpy()
+    #     import numpy as np
+    #     import matplotlib.pyplot as plt
+    #     locs_1 = np.where(img1 > 0.5)
+    #     locs_0 = np.where(img1 < 0.5)
+    #
+    #     plt.scatter(locs_0[0], locs_0[1])
+    #     plt.scatter(locs_1[0], locs_1[1], c='red')
+    #     plt.savefig('./mask.png')
+    #     raise
 
     cre_dense = nn.LogSoftmax(dim=1)
     # cre_dense = nn.Sigmoid()
@@ -396,30 +395,35 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, ((images, _), (bg0, _), (bg1, _)) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
+    for i, ((images, _), (bg0, _), (bg1, _), (masks, _)) in enumerate(zip(train_loader_list)):
         # measure data loading time
         data_time.update(time.time() - end)
 
         current_bs = images[0].size(0)
 
-        mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
-        mask_q = torch.zeros((current_bs, 224, 224))
-        mask_k = torch.zeros((current_bs, 224, 224))
-        mask_q[mask_idx_q[0], mask_idx_q[1], mask_idx_q[2]] = 1.
-        mask_k[mask_idx_k[0], mask_idx_k[1], mask_idx_k[2]] = 1.
+        # mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
+        # mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
+        # mask_q = torch.zeros((current_bs, 224, 224))
+        # mask_k = torch.zeros((current_bs, 224, 224))
+        # mask_q[mask_idx_q[0], mask_idx_q[1], mask_idx_q[2]] = 1.
+        # mask_k[mask_idx_k[0], mask_idx_k[1], mask_idx_k[2]] = 1.
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
             bg0 = bg0.cuda(args.gpu, non_blocking=True)
             bg1 = bg1.cuda(args.gpu, non_blocking=True)
-            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
-            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
+            masks[0] = masks[0].cuda(args.gpu, non_blocking=True)
+            masks[1] = masks[1].cuda(args.gpu, non_blocking=True)
+
+        mask_q = (masks[0] * torch.tensor([1., 1., -1.]).view(1, 3, 1, 1)).sum(dim=1)
+        mask_q = (mask_q > 0.5).float()
+        mask_k = (masks[1] * torch.tensor([1., 1., -1.]).view(1, 3, 1, 1)).sum(dim=1)
+        mask_k = (mask_k > 0.5).float()
 
         # generate patched images
-        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + bg0
-        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + bg1
+        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
+        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
