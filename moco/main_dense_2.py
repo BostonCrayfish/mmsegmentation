@@ -381,6 +381,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         print(img1[0])
         print(img1[1])
         print(img1[2])
+        print(img1.mean(dim=0))
         raise
 
     cre_dense = nn.LogSoftmax(dim=1)
