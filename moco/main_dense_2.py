@@ -436,6 +436,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
         loss_moco = criterion(output_moco, target_moco)
 
+        print(target_dense.sum(dim=1))
+
         # dense loss of softmax
         output_dense = output_dense.reshape(output_dense.shape[0], -1)
         output_dense[torch.where(mask_dense == 0)] = -1e10
