@@ -30,7 +30,7 @@ class GaussianBlur(object):
         return x
 
 class FixCrop(torch.nn.Module):
-    def __init__(self, size=224, seed=0, seed_length=65536, scale=(0.2, 1), ratio=(0.75, 1.33333333)):
+    def __init__(self, size=224, seed=0, seed_length=8192, scale=(0.2, 1), ratio=(0.75, 1.33333333)):
         super().__init__()
         torch.manual_seed(seed)
         self.seed_idx = 0
@@ -97,14 +97,14 @@ class FixCrop(torch.nn.Module):
         return F.resized_crop(img, i, j, h, w, self.size)
 
 class RandomHorizontalFlip_FS(torch.nn.Module):
-    def __init__(self, p=0.5, seed=0, seed_length=65536):
+    def __init__(self, p=0.5, seed=0, seed_length=1024):
         super().__init__()
         self.p = p
 
         torch.manual_seed(seed)
         self.seed_idx = 0
         self.seed_length = seed_length
-        self.seed_generator = torch.randint(0, 8192, [self.seed_length])
+        self.seed_generator = torch.randint(0, 1024, [self.seed_length])
 
     def forward(self, img):
         random_seed = self.seed_generator[self.seed_idx]
