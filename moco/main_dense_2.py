@@ -377,7 +377,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     for img0, img1 in zip(train_loader, train_loader_mask):
         img0, img1 = img0[0][0], img1[0][0]
         img1 = img1[1, :, :, :]
-        img1 = ((img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)) > 0.5).float().numpy()
+        img1 = ((img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)) > 0.5).float().sum(dim=0).numpy()
         import numpy as np
         import matplotlib.pyplot as plt
         locs = np.where(img1 == 1)
