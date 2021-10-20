@@ -274,13 +274,15 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.aug_plus:
         # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
         augmentation = [
-            moco_loader.FixCrop(size=224, seed=0),
+            # moco_loader.FixCrop(size=224, seed=0),
+            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
             transforms.RandomApply([
                 transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
             ], p=0.8),
             transforms.RandomGrayscale(p=0.2),
             transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
-            moco_loader.RandomHorizontalFlip_FS(seed=0),
+            # moco_loader.RandomHorizontalFlip_FS(seed=0),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize
         ]
@@ -300,8 +302,10 @@ def main_worker(gpu, ngpus_per_node, args):
     ]
 
     augmentation_mask = [
-        moco_loader.FixCrop(size=224, seed=0),
-        moco_loader.RandomHorizontalFlip_FS(seed=0),
+        # moco_loader.FixCrop(size=224, seed=0),
+        # moco_loader.RandomHorizontalFlip_FS(seed=0),
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+        transforms.RandomHorizontalFlip(),
         transforms.ToTensor()
     ]
 
