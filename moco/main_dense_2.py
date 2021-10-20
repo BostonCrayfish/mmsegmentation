@@ -382,6 +382,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         import matplotlib.pyplot as plt
         locs = np.where(img1 == 1)
         plt.scatter(locs[0], locs[1])
+        plt.scatter(np.where(img1==0)[0], np.where(img1==0)[1])
         plt.savefig('./mask.png')
 
         raise
