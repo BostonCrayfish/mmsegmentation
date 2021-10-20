@@ -384,7 +384,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         locs_0 = np.where(img1 < 0.5)
 
         plt.scatter(locs_0[0], locs_0[1])
-        plt.scatter(locs_1[0], locs_1[1])
+        plt.scatter(locs_1[0], locs_1[1], c='red')
         plt.savefig('./mask.png')
 
         raise
