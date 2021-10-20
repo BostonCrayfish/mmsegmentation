@@ -376,12 +376,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
     for img0, img1 in zip(train_loader, train_loader_mask):
         img0, img1 = img0[0][0], img1[0][0]
-        img1 = img1[0, :, 0::32, 0::32]
-        print((img1[0] - img1[1]).sum())
-        print(img1[0])
-        print(img1[1])
-        print(img1[2])
-        print(img1.mean(dim=0))
+        img1 = img1[1, :, :, :]
+        img1 = ((img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)) > 0.5).float().numpy()
+        import numpy as np
+        import matplotlib.pyplot as plt
+        locs = np.where(img1 == 1)
+        plt.scatter(locs[0], locs[1])
+        plt.savefig('./mask.png')
+
         raise
 
     cre_dense = nn.LogSoftmax(dim=1)
