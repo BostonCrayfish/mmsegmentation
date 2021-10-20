@@ -379,6 +379,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         img0 = img0.transpose(1, 2, 0)
         img1 = img1.transpose(1, 2, 0)
         import matplotlib.pyplot as plt
+        import numpy as np
+        print(img0)
+        print(np.min(img0), np.max(img0))
         plt.imsave(fname='./img0.png', arr=img0, format='png')
         plt.imsave(fname='./img1.png', arr=img1, format='png')
         raise
