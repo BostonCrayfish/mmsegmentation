@@ -268,6 +268,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # set different paths to data
     # for ease running on different devices
     traindir = os.path.join(data_dir, 'train')
+    maskdir = traindir.replace('ImageNet', 'ImageNet_mask')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     if args.aug_plus:
@@ -284,15 +285,7 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize
         ]
     else:
-        # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
-        augmentation = [
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ]
+        augmentation = None
 
     augmentation_bg = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
@@ -303,11 +296,9 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        normalize,
-        transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=0.)
+        normalize
     ]
 
-    ###### testing mask
     augmentation_mask = [
         moco_loader.FixCrop(size=224, seed=0),
         moco_loader.RandomHorizontalFlip_FS(seed=0),
@@ -320,10 +311,8 @@ def main_worker(gpu, ngpus_per_node, args):
     train_dataset_bg = datasets.ImageFolder(
         traindir,
         transforms.Compose(augmentation_bg))
-
-    ###### test mask
     train_dataset_mask = datasets.ImageFolder(
-        traindir, moco_loader.TwoCropsTransform(transforms.Compose(augmentation_mask)))
+        maskdir, moco_loader.TwoCropsTransform(transforms.Compose(augmentation_mask)))
 
     # load training data in three processes:
     # 1. train_*: foreground image
@@ -348,8 +337,6 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader_bg1 = torch.utils.data.DataLoader(
         train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
-
-    ###### testing mask
     train_loader_mask = torch.utils.data.DataLoader(
         train_dataset_mask, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
@@ -387,16 +374,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    ###### testing mask
     for img0, img1 in zip(train_loader, train_loader_mask):
-        img0, img1 = img0[0][0].numpy(), img1[0][0].numpy()
+        img0, img1 = img0[0][0][0].numpy(), img1[0][0][0].numpy()
         img0 = img0.transpose(1, 2, 0)
         img1 = img1.transpose(1, 2, 0)
         import matplotlib.pyplot as plt
         plt.imsave(fname='./img0.png', arr=img0, format='png')
         plt.imsave(fname='./img1.png', arr=img1, format='png')
         raise
-
 
     cre_dense = nn.LogSoftmax(dim=1)
     # cre_dense = nn.Sigmoid()

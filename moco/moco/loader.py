@@ -59,7 +59,7 @@ class FixCrop(torch.nn.Module):
 
         # print(img)
 
-        width, height = F._get_image_size(img)
+        width, height = img.size
         area = height * width
 
         log_ratio = torch.log(torch.tensor(ratio))
