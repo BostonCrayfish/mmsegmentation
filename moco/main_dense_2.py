@@ -376,7 +376,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
     for img0, img1 in zip(train_loader, train_loader_mask):
         img0, img1 = img0[0][0], img1[0][0]
-        img1 = img1[0, :, 0::16, 0::16]
+        img1 = img1[0, :, 0::32, 0::32]
         print((img1[0] - img1[1]).sum())
         print(img1[0])
         print(img1[1])
