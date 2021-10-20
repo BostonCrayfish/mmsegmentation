@@ -368,9 +368,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     loss_s = AverageMeter('Loss_seg', ':.4e')
     acc_moco = AverageMeter('Acc_moco', ':6.2f')
     acc_seg = AverageMeter('Acc_seg', ':6.2f')
-    # train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask = train_loader_list
+    train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask = train_loader_list
     progress = ProgressMeter(
-        len(train_loader_list[0]),
+        len(train_loader),
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
@@ -395,7 +395,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, ((images, _), (bg0, _), (bg1, _), (masks, _)) in enumerate(zip(train_loader_list)):
+    for i, ((images, _), (bg0, _), (bg1, _), (masks, _)) in enumerate(
+            zip(train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask)):
         # measure data loading time
         data_time.update(time.time() - end)
 
