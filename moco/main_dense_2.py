@@ -402,11 +402,6 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        mask_q = (masks[0] * torch.tensor([1., 1., -1.]).view(1, 3, 1, 1)).sum(dim=1)
-        mask_q = (mask_q > 0.5).float()
-        mask_k = (masks[1] * torch.tensor([1., 1., -1.]).view(1, 3, 1, 1)).sum(dim=1)
-        mask_k = (mask_k > 0.5).float()
-
         # mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
         # mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
         # mask_q = torch.zeros((current_bs, 224, 224))
@@ -419,8 +414,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
             bg0 = bg0.cuda(args.gpu, non_blocking=True)
             bg1 = bg1.cuda(args.gpu, non_blocking=True)
-            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
-            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
+            masks[0] = masks[0].cuda(args.gpu, non_blocking=True)
+            masks[1] = masks[1].cuda(args.gpu, non_blocking=True)
+
+        mask_weights = torch.tensor([1., 1., -1.]).cuda().view(1, 3, 1, 1)
+        mask_q = (masks[0] * mask_weights).sum(dim=1)
+        mask_q = (mask_q > 0.5).float()
+        mask_k = (masks[1] * mask_weights).sum(dim=1)
+        mask_k = (mask_k > 0.5).float()
 
         # generate patched images
         image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
