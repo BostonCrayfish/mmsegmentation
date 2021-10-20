@@ -281,8 +281,8 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.RandomGrayscale(p=0.2),
             transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
             moco_loader.RandomHorizontalFlip_FS(seed=0),
-            transforms.ToTensor()
-            # normalize
+            transforms.ToTensor(),
+            normalize
         ]
     else:
         augmentation = None
@@ -375,15 +375,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         prefix="Epoch: [{}]".format(epoch))
 
     for img0, img1 in zip(train_loader, train_loader_mask):
-        img0, img1 = img0[0][0][0].numpy(), img1[0][0][0].numpy()
-        img0 = img0.transpose(1, 2, 0)
-        img1 = img1.transpose(1, 2, 0)
-        import matplotlib.pyplot as plt
-        import numpy as np
-        print(img0)
-        print(np.min(img0), np.max(img0))
-        plt.imsave(fname='./img0.png', arr=img0, format='png')
-        plt.imsave(fname='./img1.png', arr=img1, format='png')
+        img0, img1 = img0[0][0], img1[0][0]
+        print(img0.shape, img1.shape)
         raise
 
     cre_dense = nn.LogSoftmax(dim=1)
