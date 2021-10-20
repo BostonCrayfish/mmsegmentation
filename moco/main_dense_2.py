@@ -281,8 +281,8 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.RandomGrayscale(p=0.2),
             transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
             moco_loader.RandomHorizontalFlip_FS(seed=0),
-            transforms.ToTensor(),
-            normalize
+            transforms.ToTensor()
+            # normalize
         ]
     else:
         augmentation = None
