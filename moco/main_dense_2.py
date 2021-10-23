@@ -25,6 +25,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 
 from mmcv.utils import Config
+from PIL import Image
 
 from moco.moco import loader as moco_loader
 from moco.moco import builder_dense_2 as moco_builder
@@ -268,26 +269,35 @@ def main_worker(gpu, ngpus_per_node, args):
     # set different paths to data
     # for ease running on different devices
     traindir = os.path.join(data_dir, 'train')
-    maskdir = traindir.replace('ImageNet', 'ImageNet_mask')
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    if args.aug_plus:
-        # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
-        augmentation = [
-            # moco_loader.FixCrop(size=224, seed=0),
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+
+    def my_loader(path):
+        path_mask = path.replace('ImageNet', 'ImageNet_mask')
+
+        trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
+        trans_flip = moco_loader.Flip_with_mask()
+        trans_img = transforms.Compose([
             transforms.RandomApply([
                 transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
             ], p=0.8),
             transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
-            # moco_loader.RandomHorizontalFlip_FS(seed=0),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ]
-    else:
-        augmentation = None
+            transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
+        trans_tensor = transforms.ToTensor()
+        trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+        image = Image.open(path).convert('RGB')
+        mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
+
+        two_crop_img = []
+        for _ in range(2):
+            image, mask = trans_crop(image, mask)
+            image = trans_img(image)
+            image, mask = trans_flip(image, mask)
+            image, mask = trans_tensor(image), trans_tensor(mask)
+            image = trans_norm(image) * mask
+            two_crop_img.append((image))
+
+        return two_crop_img
 
     augmentation_bg = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
@@ -298,25 +308,14 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        normalize
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
     ]
 
-    augmentation_mask = [
-        # moco_loader.FixCrop(size=224, seed=0),
-        # moco_loader.RandomHorizontalFlip_FS(seed=0),
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor()
-    ]
-
-    train_dataset = datasets.ImageFolder(
-        traindir,
-        moco_loader.TwoCropsTransform(transforms.Compose(augmentation)))
+    train_dataset = datasets.ImageFolder(traindir, loader=my_loader)
     train_dataset_bg = datasets.ImageFolder(
         traindir,
         transforms.Compose(augmentation_bg))
-    train_dataset_mask = datasets.ImageFolder(
-        maskdir, moco_loader.TwoCropsTransform(transforms.Compose(augmentation_mask)))
 
     # load training data in three processes:
     # 1. train_*: foreground image
@@ -341,9 +340,6 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader_bg1 = torch.utils.data.DataLoader(
         train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
-    train_loader_mask = torch.utils.data.DataLoader(
-        train_dataset_mask, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -353,7 +349,7 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train([train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask], model, criterion, optimizer, epoch, args)
+        train([train_loader, train_loader_bg0, train_loader_bg1], model, criterion, optimizer, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -372,7 +368,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     loss_s = AverageMeter('Loss_seg', ':.4e')
     acc_moco = AverageMeter('Acc_moco', ':6.2f')
     acc_seg = AverageMeter('Acc_seg', ':6.2f')
-    train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask = train_loader_list
+    train_loader, train_loader_bg0, train_loader_bg1 = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
@@ -393,43 +389,35 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     #     raise
 
     cre_dense = nn.LogSoftmax(dim=1)
-    # cre_dense = nn.Sigmoid()
 
     # switch to train mode
     model.train()
 
     end = time.time()
-    for i, ((images, _), (bg0, _), (bg1, _), (masks, _)) in enumerate(
-            zip(train_loader, train_loader_bg0, train_loader_bg1, train_loader_mask)):
+    for i, ((images, _), (bg0, _), (bg1, _)) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
         # measure data loading time
         data_time.update(time.time() - end)
 
         current_bs = images[0].size(0)
 
-        # mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
-        # mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
-        # mask_q = torch.zeros((current_bs, 224, 224))
-        # mask_k = torch.zeros((current_bs, 224, 224))
-        # mask_q[mask_idx_q[0], mask_idx_q[1], mask_idx_q[2]] = 1.
-        # mask_k[mask_idx_k[0], mask_idx_k[1], mask_idx_k[2]] = 1.
+        mask_idx_q = torch.where(images[0][:, 0, :, :] == 0.)
+        mask_idx_k = torch.where(images[0][:, 0, :, :] == 0.)
+        mask_q = torch.ones((current_bs, 224, 224))
+        mask_k = torch.ones((current_bs, 224, 224))
+        mask_q[mask_idx_q] = 0.
+        mask_k[mask_idx_k] = 0.
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
             bg0 = bg0.cuda(args.gpu, non_blocking=True)
             bg1 = bg1.cuda(args.gpu, non_blocking=True)
-            masks[0] = masks[0].cuda(args.gpu, non_blocking=True)
-            masks[1] = masks[1].cuda(args.gpu, non_blocking=True)
-
-        mask_weights = torch.tensor([1., 1., -1.]).cuda().view(1, 3, 1, 1)
-        mask_q = (masks[0] * mask_weights).sum(dim=1)
-        mask_q = (mask_q > 0.5).float()
-        mask_k = (masks[1] * mask_weights).sum(dim=1)
-        mask_k = (mask_k > 0.5).float()
+            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
+            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
-        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
+        image_q = images[0] + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
+        image_k = images[1] + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
