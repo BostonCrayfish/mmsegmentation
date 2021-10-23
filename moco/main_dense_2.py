@@ -136,12 +136,12 @@ def my_loader(path):
     trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                       std=[0.229, 0.224, 0.225])
 
-    image = Image.open(path).convert('RGB')
-    mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
+    image_PIL = Image.open(path).convert('RGB')
+    mask_PIL = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
 
     two_crop_img = []
     for _ in range(2):
-        image, mask = trans_crop(image, mask)
+        image, mask = trans_crop(image_PIL, mask_PIL)
         image = trans_img(image)
         image, mask = trans_flip(image, mask)
         image, mask = trans_tensor(image), trans_tensor(mask)
