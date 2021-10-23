@@ -121,6 +121,35 @@ parser.add_argument('--cos', action='store_true',
                     help='use cosine lr schedule')
 
 
+def my_loader(path):
+    path_mask = path.replace('ImageNet', 'ImageNet_mask')
+
+    trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
+    trans_flip = moco_loader.Flip_with_mask()
+    trans_img = transforms.Compose([
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+        ], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+        transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
+    trans_tensor = transforms.ToTensor()
+    trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                      std=[0.229, 0.224, 0.225])
+
+    image = Image.open(path).convert('RGB')
+    mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
+
+    two_crop_img = []
+    for _ in range(2):
+        image, mask = trans_crop(image, mask)
+        image = trans_img(image)
+        image, mask = trans_flip(image, mask)
+        image, mask = trans_tensor(image), trans_tensor(mask)
+        image = trans_norm(image) * mask
+        two_crop_img.append((image))
+
+    return two_crop_img
+
 def main():
     args = parser.parse_args()
 
@@ -270,34 +299,34 @@ def main_worker(gpu, ngpus_per_node, args):
     # for ease running on different devices
     traindir = os.path.join(data_dir, 'train')
 
-    def my_loader(path):
-        path_mask = path.replace('ImageNet', 'ImageNet_mask')
-
-        trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
-        trans_flip = moco_loader.Flip_with_mask()
-        trans_img = transforms.Compose([
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            ], p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
-        trans_tensor = transforms.ToTensor()
-        trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-
-        image = Image.open(path).convert('RGB')
-        mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
-
-        two_crop_img = []
-        for _ in range(2):
-            image, mask = trans_crop(image, mask)
-            image = trans_img(image)
-            image, mask = trans_flip(image, mask)
-            image, mask = trans_tensor(image), trans_tensor(mask)
-            image = trans_norm(image) * mask
-            two_crop_img.append((image))
-
-        return two_crop_img
+    # def my_loader(path):
+    #     path_mask = path.replace('ImageNet', 'ImageNet_mask')
+    #
+    #     trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
+    #     trans_flip = moco_loader.Flip_with_mask()
+    #     trans_img = transforms.Compose([
+    #         transforms.RandomApply([
+    #             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+    #         ], p=0.8),
+    #         transforms.RandomGrayscale(p=0.2),
+    #         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
+    #     trans_tensor = transforms.ToTensor()
+    #     trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                  std=[0.229, 0.224, 0.225])
+    #
+    #     image = Image.open(path).convert('RGB')
+    #     mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
+    #
+    #     two_crop_img = []
+    #     for _ in range(2):
+    #         image, mask = trans_crop(image, mask)
+    #         image = trans_img(image)
+    #         image, mask = trans_flip(image, mask)
+    #         image, mask = trans_tensor(image), trans_tensor(mask)
+    #         image = trans_norm(image) * mask
+    #         two_crop_img.append((image))
+    #
+    #     return two_crop_img
 
     augmentation_bg = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
