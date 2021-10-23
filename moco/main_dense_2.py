@@ -122,7 +122,7 @@ parser.add_argument('--cos', action='store_true',
 
 
 def my_loader(path):
-    path_mask = path.replace('ImageNet', 'ImageNet_mask')
+    path_mask = path.replace('ImageNet', 'ImageNet_mask').replace('.JPEG', '.png')
 
     trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
     trans_flip = moco_loader.Flip_with_mask()
