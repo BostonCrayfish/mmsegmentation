@@ -418,7 +418,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # dense loss of softmax, short
         output_dense_log = (-1.) * cre_dense(output_dense)
         output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
-        loss_dense = .05 * torch.mean(
+        loss_dense = .02 * torch.mean(
             torch.mul(output_dense_log, target_dense).sum(dim=1) / target_dense.sum(dim=1))
 
         # dense loss of softmax, k_pos_avg
