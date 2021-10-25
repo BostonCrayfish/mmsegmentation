@@ -395,8 +395,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + bg0
-        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + bg1
+        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + torch.einsum('bcxy,bxy->bcxy', [bg0, 1.-mask_q])
+        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + torch.einsum('bcxy,bxy->bcxy', [bg1, 1.-mask_k])
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
