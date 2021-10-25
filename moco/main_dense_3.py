@@ -303,8 +303,7 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        normalize,
-        transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=0.)
+        normalize
     ]
 
     train_dataset = datasets.ImageFolder(
@@ -384,12 +383,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
-        mask_q = torch.zeros((current_bs, 224, 224))
-        mask_k = torch.zeros((current_bs, 224, 224))
-        mask_q[mask_idx_q[0], mask_idx_q[1], mask_idx_q[2]] = 1.
-        mask_k[mask_idx_k[0], mask_idx_k[1], mask_idx_k[2]] = 1.
+        mask_q = (torch.rand((current_bs, 224, 224)) > .5).float()
+        mask_k = (torch.rand((current_bs, 224, 224)) > .5).float()
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
