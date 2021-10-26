@@ -377,30 +377,31 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     for (images, _), (bg0, _), (bg1, _) in zip(train_loader, train_loader_bg0, train_loader_bg1):
         import matplotlib.pyplot as plt
         import numpy as np
-        print(torch.where(images[0][0] == 0.)[0].shape)
-        print(torch.where(images[1][0] == 0.)[0].shape)
-        img0 = images[0][0].permute(1, 2, 0).numpy()
-        img1 = images[1][0].permute(1, 2, 0).numpy()
 
-        print(np.max(img0), np.min(img0))
-        raise
-        plt.imsave('./img0.png', arr=img0, format='png')
-        plt.imsave('./img1.png', arr=img1, format='png')
+        img0, img1 = images[0][0], images[1][0]
 
-        current_bs = images[0].size(0)
-        mask_idx_q = torch.where(images[0][:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(images[0][:, 0, :, :] == 0.)
-        mask_q = torch.ones((current_bs, 224, 224))
-        mask_k = torch.ones((current_bs, 224, 224))
+        mask_idx_q = torch.where(img0 == 0.)
+        mask_idx_k = torch.where(img1 == 0.)
+        mask_q = torch.ones((3, 224, 224))
+        mask_k = torch.ones((3, 224, 224))
         mask_q[mask_idx_q] = 0.
         mask_k[mask_idx_k] = 0.
-        image_q = images[0] + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
-        image_k = images[1] + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
 
-        img_q = image_q[0].permute(1, 2, 0).numpy()
-        img_k = image_k[0].permute(1, 2, 0).numpy()
-        plt.imsave('./img_q.png', arr=img_q, format='png')
-        plt.imsave('./img_k.png', arr=img_k, format='png')
+        img0, img1 = img0.permute(1, 2, 0), img1.permute(1, 2, 0)
+        img0 = (img0 - img0.min(dim=(0, 1))) / (img0.max(dim=(0, 1)) - img0.min(dim=(0, 1))) * mask_idx_q
+        img1 = (img1 - img1.min(dim=(0, 1))) / (img1.max(dim=(0, 1)) - img1.min(dim=(0, 1))) * mask_idx_k
+
+        plt.imsave('./img0.png', arr=img0.numpy(), format='png')
+        plt.imsave('./img1.png', arr=img1.numpy(), format='png')
+
+
+        # image_q = images[0] + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
+        # image_k = images[1] + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
+        #
+        # img_q = image_q[0].permute(1, 2, 0).numpy()
+        # img_k = image_k[0].permute(1, 2, 0).numpy()
+        # plt.imsave('./img_q.png', arr=img_q, format='png')
+        # plt.imsave('./img_k.png', arr=img_k, format='png')
 
         raise
 
@@ -417,7 +418,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         current_bs = images[0].size(0)
 
         mask_idx_q = torch.where(images[0][:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(images[0][:, 0, :, :] == 0.)
+        mask_idx_k = torch.where(images[1][:, 0, :, :] == 0.)
         mask_q = torch.ones((current_bs, 224, 224))
         mask_k = torch.ones((current_bs, 224, 224))
         mask_q[mask_idx_q] = 0.
