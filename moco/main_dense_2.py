@@ -374,33 +374,32 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    for (images, _), (bg0, _), (bg1, _) in zip(train_loader, train_loader_bg0, train_loader_bg1):
-        import matplotlib.pyplot as plt
-        import numpy as np
-
-        img0, img1 = images[0][0], images[1][0]
-        bg0, bg1 = bg0[0].permute(1,2,0).numpy(), bg1[0].permute(1,2,0).numpy()
-
-        mask_idx_q = torch.where(img0 == 0.)
-        mask_idx_k = torch.where(img1 == 0.)
-        mask_q = torch.ones((3, 224, 224))
-        mask_k = torch.ones((3, 224, 224))
-        mask_q[mask_idx_q] = 0.
-        mask_k[mask_idx_k] = 0.
-
-        img0, img1 = img0.permute(1, 2, 0).numpy(), img1.permute(1, 2, 0).numpy()
-        mask_q, mask_k = mask_q.permute(1,2,0).numpy(), mask_k.permute(1,2,0).numpy()
-        img0 = (img0 - img0.min(axis=(0, 1))) / (img0.max(axis=(0, 1)) - img0.min(axis=(0, 1))) * mask_q
-        img1 = (img1 - img1.min(axis=(0, 1))) / (img1.max(axis=(0, 1)) - img1.min(axis=(0, 1))) * mask_k
-        bg0 = (bg0 - bg0.min(axis=(0, 1))) / (bg0.max(axis=(0, 1)) - bg0.min(axis=(0, 1))) * (1 - mask_q)
-        bg1 = (bg1 - bg1.min(axis=(0, 1))) / (bg1.max(axis=(0, 1)) - bg1.min(axis=(0, 1))) * (1 - mask_k)
-
-        plt.imsave('./img0.png', arr=img0, format='png')
-        plt.imsave('./img1.png', arr=img1, format='png')
-        plt.imsave('./img_q.png', arr=img0 + bg0, format='png')
-        plt.imsave('./img_k.png', arr=img1 + bg1, format='png')
-
-        raise
+    # for (images, _), (bg0, _), (bg1, _) in zip(train_loader, train_loader_bg0, train_loader_bg1):
+    #     import matplotlib.pyplot as plt
+    #     import numpy as np
+    #
+    #     img0, img1 = images[0][0], images[1][0]
+    #     bg0, bg1 = bg0[0].permute(1,2,0).numpy(), bg1[0].permute(1,2,0).numpy()
+    #
+    #     mask_idx_q = torch.where(img0 == 0.)
+    #     mask_idx_k = torch.where(img1 == 0.)
+    #     mask_q = torch.ones((3, 224, 224))
+    #     mask_k = torch.ones((3, 224, 224))
+    #     mask_q[mask_idx_q] = 0.
+    #     mask_k[mask_idx_k] = 0.
+    #
+    #     img0, img1 = img0.permute(1, 2, 0).numpy(), img1.permute(1, 2, 0).numpy()
+    #     mask_q, mask_k = mask_q.permute(1,2,0).numpy(), mask_k.permute(1,2,0).numpy()
+    #     img0 = (img0 - img0.min(axis=(0, 1))) / (img0.max(axis=(0, 1)) - img0.min(axis=(0, 1))) * mask_q
+    #     img1 = (img1 - img1.min(axis=(0, 1))) / (img1.max(axis=(0, 1)) - img1.min(axis=(0, 1))) * mask_k
+    #     bg0 = (bg0 - bg0.min(axis=(0, 1))) / (bg0.max(axis=(0, 1)) - bg0.min(axis=(0, 1))) * (1 - mask_q)
+    #     bg1 = (bg1 - bg1.min(axis=(0, 1))) / (bg1.max(axis=(0, 1)) - bg1.min(axis=(0, 1))) * (1 - mask_k)
+    #
+    #     plt.imsave('./img0.png', arr=img0, format='png')
+    #     plt.imsave('./img1.png', arr=img1, format='png')
+    #     plt.imsave('./img_q.png', arr=img0 + bg0, format='png')
+    #     plt.imsave('./img_k.png', arr=img1 + bg1, format='png')
+    #     raise
 
     cre_dense = nn.LogSoftmax(dim=1)
 
