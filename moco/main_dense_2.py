@@ -299,35 +299,6 @@ def main_worker(gpu, ngpus_per_node, args):
     # for ease running on different devices
     traindir = os.path.join(data_dir, 'train')
 
-    # def my_loader(path):
-    #     path_mask = path.replace('ImageNet', 'ImageNet_mask')
-    #
-    #     trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
-    #     trans_flip = moco_loader.Flip_with_mask()
-    #     trans_img = transforms.Compose([
-    #         transforms.RandomApply([
-    #             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-    #         ], p=0.8),
-    #         transforms.RandomGrayscale(p=0.2),
-    #         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
-    #     trans_tensor = transforms.ToTensor()
-    #     trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                  std=[0.229, 0.224, 0.225])
-    #
-    #     image = Image.open(path).convert('RGB')
-    #     mask = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
-    #
-    #     two_crop_img = []
-    #     for _ in range(2):
-    #         image, mask = trans_crop(image, mask)
-    #         image = trans_img(image)
-    #         image, mask = trans_flip(image, mask)
-    #         image, mask = trans_tensor(image), trans_tensor(mask)
-    #         image = trans_norm(image) * mask
-    #         two_crop_img.append((image))
-    #
-    #     return two_crop_img
-
     augmentation_bg = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
         transforms.RandomApply([
@@ -403,19 +374,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    # for img0, img1 in zip(train_loader, train_loader_mask):
-    #     img0, img1 = img0[0][0], img1[0][0]
-    #     img1 = img1[1, :, :, :]
-    #     img1 = (img1 * torch.tensor([1., 1., -1.]).view(3, 1, 1)).sum(dim=0).numpy()
-    #     import numpy as np
-    #     import matplotlib.pyplot as plt
-    #     locs_1 = np.where(img1 > 0.5)
-    #     locs_0 = np.where(img1 < 0.5)
-    #
-    #     plt.scatter(locs_0[0], locs_0[1])
-    #     plt.scatter(locs_1[0], locs_1[1], c='red')
-    #     plt.savefig('./mask.png')
-    #     raise
+    for images, _ in train_loader:
+        import matplotlib.pyplot as plt
+        print(torch.where(images[0][0] == 0.)[0].shape)
+        print(torch.where(images[1][0] == 0.)[0].shape)
+        img0 = images[0][0].transpose(1, 2, 0).numpy()
+        img1 = images[1][0].transpose(1, 2, 0).numpy()
+        plt.imsave('./img0.png', arr=img0, format='png')
+        plt.imsave('./img1.png', arr=img1, format='png')
+        raise
 
     cre_dense = nn.LogSoftmax(dim=1)
 
