@@ -378,8 +378,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         import matplotlib.pyplot as plt
         print(torch.where(images[0][0] == 0.)[0].shape)
         print(torch.where(images[1][0] == 0.)[0].shape)
-        img0 = images[0][0].transpose(1, 2, 0).numpy()
-        img1 = images[1][0].transpose(1, 2, 0).numpy()
+        img0 = images[0][0].permute(1, 2, 0).numpy()
+        img1 = images[1][0].permute(1, 2, 0).numpy()
         plt.imsave('./img0.png', arr=img0, format='png')
         plt.imsave('./img1.png', arr=img1, format='png')
         raise
