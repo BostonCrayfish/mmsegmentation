@@ -388,8 +388,9 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         mask_k[mask_idx_k] = 0.
 
         img0, img1 = img0.permute(1, 2, 0).numpy(), img1.permute(1, 2, 0).numpy()
-        img0 = (img0 - img0.min(axis=(0, 1))) / (img0.max(axis=(0, 1)) - img0.min(axis=(0, 1))) * mask_idx_q.numpy()
-        img1 = (img1 - img1.min(axis=(0, 1))) / (img1.max(axis=(0, 1)) - img1.min(axis=(0, 1))) * mask_idx_k.numpy()
+        mask_q, mask_k = mask_q.permute(1,2,0).numpy(), mask_k.permute(1,2,0).numpy()
+        img0 = (img0 - img0.min(axis=(0, 1))) / (img0.max(axis=(0, 1)) - img0.min(axis=(0, 1))) * mask_q
+        img1 = (img1 - img1.min(axis=(0, 1))) / (img1.max(axis=(0, 1)) - img1.min(axis=(0, 1))) * mask_k
 
         plt.imsave('./img0.png', arr=img0, format='png')
         plt.imsave('./img1.png', arr=img1, format='png')
