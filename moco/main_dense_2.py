@@ -376,10 +376,14 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
     for (images, _), (bg0, _), (bg1, _) in zip(train_loader, train_loader_bg0, train_loader_bg1):
         import matplotlib.pyplot as plt
+        import numpy as np
         print(torch.where(images[0][0] == 0.)[0].shape)
         print(torch.where(images[1][0] == 0.)[0].shape)
         img0 = images[0][0].permute(1, 2, 0).numpy()
         img1 = images[1][0].permute(1, 2, 0).numpy()
+
+        print(np.max(img0), np.min(img0))
+        raise
         plt.imsave('./img0.png', arr=img0, format='png')
         plt.imsave('./img1.png', arr=img1, format='png')
 
