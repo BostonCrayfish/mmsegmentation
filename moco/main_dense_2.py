@@ -137,7 +137,7 @@ def my_loader(path):
                                       std=[0.229, 0.224, 0.225])
 
     image_PIL = Image.open(path).convert('RGB')
-    mask_PIL = Image.open(path_mask).convert('1')  # where is 1 or 0 should be checked
+    mask_PIL = Image.open(path_mask).convert('RGB')  # where is 1 or 0 should be checked
 
     two_crop_img = []
     for _ in range(2):
@@ -145,6 +145,7 @@ def my_loader(path):
         image = trans_img(image)
         image, mask = trans_flip(image, mask)
         image, mask = trans_tensor(image), trans_tensor(mask)
+        mask = (mask[1] > 0.5).float()  # channel 1 of mask is representive
         image = trans_norm(image) * mask
         two_crop_img.append((image))
 
