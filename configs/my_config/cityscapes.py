@@ -24,7 +24,7 @@ elif device_name == 's6':
 else:
     raise ValueError('Unknown device')
 
-channels = 512
+channels = 256
 model = dict(
     type='EncoderDecoder',
     pretrained=pretrain_path,
