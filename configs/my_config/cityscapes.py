@@ -6,9 +6,9 @@ if device_name == 'ccvl8':
     # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1023.pth'
     data_root = '/home/cwei/feng/data/cityscapes'
 elif device_name == 'ccvl11':
-    # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
+    pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_800ep_trans.pth'
     # pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_1025.pth'
-    pretrain_path = 'open-mmlab://resnet50_v1c'
+    # pretrain_path = 'open-mmlab://resnet50_v1c'
     data_root = '/home/feng/data/cityscapes'
 elif device_name == 's2':
     pretrain_path = '/home/qinghua-user3/deep-learning/work_mmseg/checkpoints/moco_r50_200ep_trans.pth'
@@ -30,7 +30,7 @@ model = dict(
     type='EncoderDecoder',
     pretrained=pretrain_path,
     backbone=dict(
-        type='ResNetV1c',
+        type='ResNet',
         depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
