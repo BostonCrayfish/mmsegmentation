@@ -25,10 +25,9 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 
 from mmcv.utils import Config
-from PIL import Image
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense_2 as moco_builder
+from moco.moco import builder_dense_1 as moco_builder
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -120,64 +119,6 @@ parser.add_argument('--aug-plus', action='store_true',
 parser.add_argument('--cos', action='store_true',
                     help='use cosine lr schedule')
 
-
-def my_loader(path):
-    path_mask = path.replace('ImageNet', 'ImageNet_mask').replace('.JPEG', '.png')
-
-    trans_crop = moco_loader.Crop_with_mask(size=224, scale=(0.2, 1))
-    trans_flip = moco_loader.Flip_with_mask()
-    trans_img = transforms.Compose([
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5)])
-    trans_tensor = transforms.ToTensor()
-    trans_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                      std=[0.229, 0.224, 0.225])
-
-    image_PIL = Image.open(path).convert('RGB')
-    mask_PIL = Image.open(path_mask).convert('RGB')
-
-    two_crop_img = []
-
-    # two dino masks
-    # for _ in range(2):
-    #     image, mask = trans_crop(image_PIL, mask_PIL)
-    #     image = trans_img(image)
-    #     image, mask = trans_flip(image, mask)
-    #     image, mask = trans_tensor(image), trans_tensor(mask)
-    #     mask = (mask[1] > 0.5).float()  # channel 1 of mask is representive
-    #     image = trans_norm(image) * mask
-    #     two_crop_img.append(image)
-
-    # one dino mask and one random rectangle
-    image_q, mask_q = trans_crop(image_PIL, mask_PIL)
-    image_q = trans_img(image_q)
-    image_q, mask_q = trans_flip(image_q, mask_q)
-    image_q, mask_q = trans_tensor(image_q), trans_tensor(mask_q)
-    mask_q = (mask_q[1] > 0.5).float()  # channel 1 of mask is representive
-    image_q = trans_norm(image_q) * mask_q
-    two_crop_img.append(image_q)
-
-    trans_kf = transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        trans_norm
-    ])
-    trans_kb = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
-    image_k = trans_kf(image_PIL)
-    mask_k = trans_kb(torch.zeros(1, 224, 224))[0]
-    image_k = image_k * mask_k
-    two_crop_img.append(image_k)
-
-    return two_crop_img
 
 def main():
     args = parser.parse_args()
@@ -327,6 +268,32 @@ def main_worker(gpu, ngpus_per_node, args):
     # set different paths to data
     # for ease running on different devices
     traindir = os.path.join(data_dir, 'train')
+    traindir_mask = traindir.replace('ImageNet', 'ImageNet_mask')
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    if args.aug_plus:
+        # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
+        augmentation = [
+            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize
+        ]
+    else:
+        # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
+        augmentation = [
+            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize
+        ]
 
     augmentation_bg = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
@@ -337,14 +304,23 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
+        normalize,
     ]
 
-    train_dataset = datasets.ImageFolder(traindir, loader=my_loader)
+    augmentation_m = [
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+    ]
+
+    train_dataset = datasets.ImageFolder(
+        traindir,
+        moco_loader.TwoCropsTransform(transforms.Compose(augmentation)))
     train_dataset_bg = datasets.ImageFolder(
         traindir,
         transforms.Compose(augmentation_bg))
+    train_dataset_m = datasets.ImageFolder(
+        traindir_mask, transforms.Compose(augmentation_m))
 
     # load training data in three processes:
     # 1. train_*: foreground image
@@ -355,10 +331,14 @@ def main_worker(gpu, ngpus_per_node, args):
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, seed=0)
         train_sampler_bg0 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=1024)
         train_sampler_bg1 = torch.utils.data.distributed.DistributedSampler(train_dataset_bg, seed=2048)
+        train_sampler_m0 = torch.utils.data.distributed.DistributedSampler(train_dataset_m, seed=3072)
+        train_sampler_m1 = torch.utils.data.distributed.DistributedSampler(train_dataset_m, seed=4096)
     else:
         train_sampler = None
         train_sampler_bg0 = None
         train_sampler_bg1 = None
+        train_sampler_m0 = None
+        train_sampler_m1 = None
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
@@ -369,16 +349,25 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader_bg1 = torch.utils.data.DataLoader(
         train_dataset_bg, batch_size=args.batch_size, shuffle=(train_sampler_bg1 is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler_bg1, drop_last=True)
+    train_loader_m0 = torch.utils.data.DataLoader(
+        train_dataset_m, batch_size=args.batch_size, shuffle=(train_sampler_m0 is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler_m0, drop_last=True)
+    train_loader_m1 = torch.utils.data.DataLoader(
+        train_dataset_m, batch_size=args.batch_size, shuffle=(train_sampler_m1 is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler_m1, drop_last=True)
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
             train_sampler_bg0.set_epoch(epoch)
             train_sampler_bg1.set_epoch(epoch)
+            train_sampler_m0.set_epoch(epoch)
+            train_sampler_m1.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train([train_loader, train_loader_bg0, train_loader_bg1], model, criterion, optimizer, epoch, args)
+        train([train_loader, train_loader_bg0, train_loader_bg1, train_loader_m0, train_loader_m1],
+              model, criterion, optimizer, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -397,69 +386,40 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
     loss_s = AverageMeter('Loss_seg', ':.4e')
     acc_moco = AverageMeter('Acc_moco', ':6.2f')
     acc_seg = AverageMeter('Acc_seg', ':6.2f')
-    train_loader, train_loader_bg0, train_loader_bg1 = train_loader_list
+    train_loader, train_loader_bg0, train_loader_bg1, train_loader_m0, train_loader_m1 = train_loader_list
     progress = ProgressMeter(
         len(train_loader),
         [batch_time, loss_m, loss_s, acc_moco, acc_seg],
         prefix="Epoch: [{}]".format(epoch))
 
-    # for (images, _), (bg0, _), (bg1, _) in zip(train_loader, train_loader_bg0, train_loader_bg1):
-    #     import matplotlib.pyplot as plt
-    #     import numpy as np
-    #
-    #     img0, img1 = images[0][0], images[1][0]
-    #     bg0, bg1 = bg0[0].permute(1,2,0).numpy(), bg1[0].permute(1,2,0).numpy()
-    #
-    #     mask_idx_q = torch.where(img0 == 0.)
-    #     mask_idx_k = torch.where(img1 == 0.)
-    #     mask_q = torch.ones((3, 224, 224))
-    #     mask_k = torch.ones((3, 224, 224))
-    #     mask_q[mask_idx_q] = 0.
-    #     mask_k[mask_idx_k] = 0.
-    #
-    #     img0, img1 = img0.permute(1, 2, 0).numpy(), img1.permute(1, 2, 0).numpy()
-    #     mask_q, mask_k = mask_q.permute(1,2,0).numpy(), mask_k.permute(1,2,0).numpy()
-    #     img0 = (img0 - img0.min(axis=(0, 1))) / (img0.max(axis=(0, 1)) - img0.min(axis=(0, 1))) * mask_q
-    #     img1 = (img1 - img1.min(axis=(0, 1))) / (img1.max(axis=(0, 1)) - img1.min(axis=(0, 1))) * mask_k
-    #     bg0 = (bg0 - bg0.min(axis=(0, 1))) / (bg0.max(axis=(0, 1)) - bg0.min(axis=(0, 1))) * (1 - mask_q)
-    #     bg1 = (bg1 - bg1.min(axis=(0, 1))) / (bg1.max(axis=(0, 1)) - bg1.min(axis=(0, 1))) * (1 - mask_k)
-    #
-    #     plt.imsave('./img0.png', arr=img0, format='png')
-    #     plt.imsave('./img1.png', arr=img1, format='png')
-    #     plt.imsave('./img_q.png', arr=img0 + bg0, format='png')
-    #     plt.imsave('./img_k.png', arr=img1 + bg1, format='png')
-    #     raise
-
     cre_dense = nn.LogSoftmax(dim=1)
+    # cre_dense = nn.Sigmoid()
 
     # switch to train mode
     model.train()
 
     end = time.time()
-    for i, ((images, _), (bg0, _), (bg1, _)) in enumerate(zip(train_loader, train_loader_bg0, train_loader_bg1)):
+    for i, ((images, _), (bg0, _), (bg1, _), (m0, _), (m1, _)) in enumerate(zip(
+            train_loader, train_loader_bg0, train_loader_bg1, train_loader_m0, train_loader_m1)):
         # measure data loading time
         data_time.update(time.time() - end)
-
-        current_bs = images[0].size(0)
-
-        mask_idx_q = torch.where(images[0][:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(images[1][:, 0, :, :] == 0.)
-        mask_q = torch.ones((current_bs, 224, 224))
-        mask_k = torch.ones((current_bs, 224, 224))
-        mask_q[mask_idx_q] = 0.
-        mask_k[mask_idx_k] = 0.
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
             bg0 = bg0.cuda(args.gpu, non_blocking=True)
             bg1 = bg1.cuda(args.gpu, non_blocking=True)
-            mask_q = mask_q.cuda(args.gpu, non_blocking=True)
-            mask_k = mask_k.cuda(args.gpu, non_blocking=True)
+            m0 = m0.cuda(args.gpu, non_blocking=True)
+            m1 = m1.cuda(args.gpu, non_blocking=True)
+
+        mask_q = (m0[:, 1, :, :] > .5).float()
+        mask_k = (m1[:, 1, :, :] > .5).float()
 
         # generate patched images
-        image_q = images[0] + torch.einsum('bcxy,bxy->bcxy', [bg0, 1 - mask_q])
-        image_k = images[1] + torch.einsum('bcxy,bxy->bcxy', [bg1, 1 - mask_k])
+        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) +\
+                  torch.einsum('bcxy,bxy->bcxy', [bg0, (1. - mask_q)])
+        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) +\
+                  torch.einsum('bcxy,bxy->bcxy', [bg1, (1. - mask_k)])
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
@@ -467,17 +427,17 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
-        output_dense = output_dense.reshape(output_dense.shape[0], -1)
-        output_dense[torch.where(mask_dense == 0)] = -1e10
-        output_dense_log = (-1.) * cre_dense(output_dense)
-        loss_dense = torch.mean(
-            torch.mul(output_dense_log, target_dense).sum(dim=1) / (target_dense.sum(dim=1) + 1e-5))
+        # output_dense = output_dense.reshape(output_dense.shape[0], -1)
+        # output_dense[torch.where(mask_dense == 0)] = -1e10
+        # output_dense_log = (-1.) * cre_dense(output_dense)
+        # loss_dense = torch.mean(
+        #     torch.mul(output_dense_log, target_dense).sum(dim=1) / target_dense.sum(dim=1))
 
         # dense loss of softmax, short
-        # output_dense_log = (-1.) * cre_dense(output_dense)
-        # output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
-        # loss_dense = .1 * torch.mean(
-        #     torch.mul(output_dense_log, target_dense).sum(dim=1) / target_dense.sum(dim=1))
+        output_dense_log = (-1.) * cre_dense(output_dense)
+        output_dense_log = output_dense_log.reshape(output_dense_log.shape[0], -1)
+        loss_dense = .02 * torch.mean(
+            torch.mul(output_dense_log, target_dense).sum(dim=1) / target_dense.sum(dim=1))
 
         # dense loss of softmax, k_pos_avg
         # output_dense_log = (-1.) * cre_dense(output_dense)
