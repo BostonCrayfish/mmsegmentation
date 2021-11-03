@@ -2,12 +2,12 @@
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 # norm_cfg = dict(type='BN', requires_grad=True)
 
-device_name = 's6'
+device_name = 'ccvl8'
 
 if device_name == 'ccvl8':
-    pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
+    # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
     # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_800ep_trans.pth'
-    # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1013_ccvl11.pth'
+    pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/sss/sss_1104.pth'
     data_root = '/home/cwei/feng/data/VOC2012'
 elif device_name == 'ccvl11':
     # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
