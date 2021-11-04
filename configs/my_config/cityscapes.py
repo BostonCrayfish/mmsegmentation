@@ -4,7 +4,7 @@ norm_cfg = dict(type='SyncBN', requires_grad=True)
 # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_800ep_trans.pth'
 # pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_1025.pth'
 # pretrain_path = 'open-mmlab://resnet50_v1c'
-pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_v1_r50_200ep_trans.pth'
+pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/swav_r50_800ep_trans.pth'
 data_root = '/home/feng/data/cityscapes'
 
 channels = 512
