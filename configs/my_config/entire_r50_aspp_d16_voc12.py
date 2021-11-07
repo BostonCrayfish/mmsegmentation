@@ -1,8 +1,8 @@
 # model settings
-norm_cfg = dict(type='SyncBN', requires_grad=True)
-# norm_cfg = dict(type='BN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
 
-device_name = 's6'
+device_name = 'ccvl11'
 
 if device_name == 'ccvl8':
     # pretrain_path = '/home/cwei/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
@@ -12,7 +12,7 @@ if device_name == 'ccvl8':
     data_root = '/home/cwei/feng/data/VOC2012'
 elif device_name == 'ccvl11':
     # pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_200ep_trans.pth'
-    pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_800ep_trans.pth'
+    pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/byol_r50_300ep.pth'
     # pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/byol_1ep_fine.pth'
     data_root = '/export/ccvl11b/cwei/data/VOC2012'
 elif device_name == 's2':
