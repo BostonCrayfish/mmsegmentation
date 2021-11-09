@@ -29,7 +29,7 @@ elif device_name == 's6':
     # pretrain_path = '/sdb1/fidtqh2/work_place/sss/moco_v1_r50_200ep_trans.pth'
     # pretrain_path = '/sdb1/fidtqh2/work_place/sss/insloc_c4_400ep_trans.pth'
     # pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_1013_ccvl11.pth'
-    pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_1028_s2.pth'
+    pretrain_path = '/sdb1/fidtqh2/work_place/sss/sss_scratch_no_dense.pth'
     data_root = '/sdb1/fidtqh2/data/VOC2012'
 else:
     raise ValueError('Unknown device')
