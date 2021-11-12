@@ -163,7 +163,7 @@ def main_worker(gpu, ngpus_per_node, args):
         config_dir = '/home/feng/work_place/checkpoints/'
     elif args.device_name == 'ccvl8':
         data_dir = '/home/cwei/feng/data/ImageNet'
-        config_dir = '/home/cwei/feng/mmsegmentation/configs/my_config'
+        config_dir = '/home/cwei/feng/work_place/checkpoints/'
     elif args.device_name == 's2':
         data_dir = '/stor2/wangfeng/ImageNet'
         config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
