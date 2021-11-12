@@ -160,7 +160,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # for ease running on different devices
     if args.device_name == 'ccvl11':
         data_dir = '/export/ccvl11b/cwei/data/ImageNet'
-        config_dir = '/home/feng/mmsegmentation/configs/my_config'
+        config_dir = '/home/feng/work_place/checkpoints/'
     elif args.device_name == 'ccvl8':
         data_dir = '/home/cwei/feng/data/ImageNet'
         config_dir = '/home/cwei/feng/mmsegmentation/configs/my_config'
@@ -176,7 +176,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         raise ValueError("missing data directory or unknown device")
 
-    cfg = Config.fromfile(config_dir + '/entire_r50_aspp_d16_voc12.py')
+    cfg = Config.fromfile(config_dir + 'config_segco.py')
     args.gpu = gpu
     args.config_dir = config_dir
 
