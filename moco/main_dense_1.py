@@ -166,7 +166,7 @@ def main_worker(gpu, ngpus_per_node, args):
         config_dir = '/home/cwei/feng/work_place/checkpoints/'
     elif args.device_name == 's2':
         data_dir = '/stor2/wangfeng/ImageNet'
-        config_dir = '/home/qinghua-user3/deep-learning/mmsegmentation/configs/my_config'
+        config_dir = '/stor2/wangfeng/work_place/checkpoints/'
     elif args.device_name == 's5':
         data_dir = '/stor1/user1/data/ImageNet'
         config_dir = '/home/user1/mmsegmentation/configs/my_config'
@@ -432,7 +432,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         #              torch.mul(torch.log(1. - output_dense), (1 - target_dense))
         # loss_dense = loss_dense.mean() * (-10)
 
-        loss = loss_moco + loss_dense * 0.2
+        loss = loss_moco + loss_dense
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
