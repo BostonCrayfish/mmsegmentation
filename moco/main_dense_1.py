@@ -172,7 +172,7 @@ def main_worker(gpu, ngpus_per_node, args):
         config_dir = '/home/user1/mmsegmentation/configs/my_config'
     elif args.device_name == 's6':
         data_dir = '/sdb1/fidtqh2/data/ImageNet'
-        config_dir = '/home/fidtqh2/mmsegmentation/configs/my_config'
+        config_dir = '/sdb1/fidtqh2/work_place/scripts/'
     else:
         raise ValueError("missing data directory or unknown device")
 
