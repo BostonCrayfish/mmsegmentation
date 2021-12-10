@@ -50,6 +50,7 @@ parser.add_argument('--data', metavar='DIR',
                     default='/export/ccvl11b/cwei/data/ImageNet',
                     help='path to dataset')
 parser.add_argument('--device-name', default='ccvl11', help='device name')
+parser.add_argument('--head', default='aspp', help='decoder head')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
                     choices=model_names,
                     help='model architecture: ' +
@@ -176,8 +177,12 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         raise ValueError("missing data directory or unknown device")
 
-    # cfg = Config.fromfile(config_dir + 'config_segco.py')
-    cfg = Config.fromfile(config_dir + 'r50_fcn_d16.py')
+    if args.head == 'fcn':
+        cfg_file = 'config_segco_fcn.py'
+    else:
+        cfg_file = 'config_segco_aspp.py'
+
+    cfg = Config.fromfile(config_dir + cfg_file)
     args.gpu = gpu
     args.config_dir = config_dir
 

@@ -1,12 +1,10 @@
-# original version of aspp
-
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
 
 from mmseg.ops import resize
-from ..builder import HEADS
-from .decode_head import BaseDecodeHead
+from mmseg.models.builder import HEADS
+from mmseg.models.decode_heads.decode_head import BaseDecodeHead
 
 
 class ASPPModule(nn.ModuleList):
@@ -63,10 +61,11 @@ class ASPPHead(BaseDecodeHead):
             Default: (1, 6, 12, 18).
     """
 
-    def __init__(self, dilations=(1, 6, 12, 18), **kwargs):
+    def __init__(self, dilations=(1, 6, 12, 18), contrast=False, **kwargs):
         super(ASPPHead, self).__init__(**kwargs)
         assert isinstance(dilations, (list, tuple))
         self.dilations = dilations
+        self.contrast = contrast
         self.image_pool = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             ConvModule(
@@ -91,6 +90,11 @@ class ASPPHead(BaseDecodeHead):
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
+        if self.contrast:
+            self.contrast_conv = nn.Sequential(
+                nn.Conv2d(self.channels, self.channels, 1),
+                nn.ReLU(),
+                nn.Conv2d(self.channels, 128, 1))
 
     def forward(self, inputs):
         """Forward function."""
@@ -105,5 +109,8 @@ class ASPPHead(BaseDecodeHead):
         aspp_outs.extend(self.aspp_modules(x))
         aspp_outs = torch.cat(aspp_outs, dim=1)
         output = self.bottleneck(aspp_outs)
-        output = self.cls_seg(output)
+        if self.contrast:
+            output = self.contrast_conv(output)
+        else:
+            output = self.cls_seg(output)
         return output
