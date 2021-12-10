@@ -24,11 +24,13 @@ class FCNHead(BaseDecodeHead):
                  num_convs=2,
                  kernel_size=3,
                  concat_input=True,
+                 contrast=False,
                  dilation=1,
                  **kwargs):
         assert num_convs >= 0 and dilation > 0 and isinstance(dilation, int)
         self.num_convs = num_convs
         self.concat_input = concat_input
+        self.contrast = contrast
         self.kernel_size = kernel_size
         super(FCNHead, self).__init__(**kwargs)
         if num_convs == 0:
@@ -70,6 +72,11 @@ class FCNHead(BaseDecodeHead):
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg)
+        if self.contrast:
+            self.contrast_conv = nn.Sequential(
+                nn.Conv2d(self.channels, self.channels, 1),
+                nn.ReLU(),
+                nn.Conv2d(self.channels, 128, 1))
 
     def forward(self, inputs):
         """Forward function."""
@@ -77,5 +84,8 @@ class FCNHead(BaseDecodeHead):
         output = self.convs(x)
         if self.concat_input:
             output = self.conv_cat(torch.cat([x, output], dim=1))
-        output = self.cls_seg(output)
+        if self.contrast:
+            output = self.contrast_conv(output)
+        else:
+            output = self.cls_seg(output)
         return output

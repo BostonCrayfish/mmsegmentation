@@ -22,6 +22,7 @@ model = dict(
         channels=256,
         num_convs=2,
         concat_input=False,
+        contrast=True,
         dropout_ratio=0.1,
         num_classes=21,
         norm_cfg=norm_cfg,
