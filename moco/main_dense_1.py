@@ -176,7 +176,8 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         raise ValueError("missing data directory or unknown device")
 
-    cfg = Config.fromfile(config_dir + 'config_segco.py')
+    # cfg = Config.fromfile(config_dir + 'config_segco.py')
+    cfg = Config.fromfile(config_dir + 'r50_fcn_d16.py')
     args.gpu = gpu
     args.config_dir = config_dir
 
