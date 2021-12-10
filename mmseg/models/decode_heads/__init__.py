@@ -7,7 +7,7 @@ from .dm_head import DMHead
 from .dnl_head import DNLHead
 from .ema_head import EMAHead
 from .enc_head import EncHead
-from .fcn_head import FCNHead
+from .fcn_head_moco import FCNHead
 from .fpn_head import FPNHead
 from .gc_head import GCHead
 from .lraspp_head import LRASPPHead
