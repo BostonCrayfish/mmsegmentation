@@ -1,9 +1,12 @@
+# Configs for SegCo pretraining
+# fcn stride 16 (same as moco v2)
+
 norm_cfg = dict(type='BN', requires_grad=True)
-channels = 512
+pretrain_path = '/home/cwei/feng/work_place/checkpoints/moco/moco_r50_800ep_trans.pth'
 
 model = dict(
     type='EncoderDecoder',
-    pretrained=None,
+    pretrained=pretrain_path,
     backbone=dict(
         type='ResNet',
         depth=50,
