@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
+from mmcv.cnn import constant_init
 from mmcv.runner import auto_fp16, force_fp32
 from mmcv.runner import load_checkpoint
 
@@ -138,7 +139,8 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         if isinstance(pretrained, str):
             logger = get_root_logger()
             load_checkpoint(self, pretrained, strict=False, logger=logger)
-        normal_init(self.conv_seg, mean=0, std=0.01)
+        # normal_init(self.conv_seg, mean=0, std=0.01)
+        constant_init(self.conv_seg, 0)
 
     def _transform_inputs(self, inputs):
         """Transform inputs for decoder.
