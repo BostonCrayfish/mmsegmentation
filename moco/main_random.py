@@ -23,8 +23,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from skimage.segmentation import felzenszwalb
-from PIL import Image
 
 from mmcv.utils import Config
 
@@ -122,54 +120,6 @@ parser.add_argument('--aug-plus', action='store_true',
 parser.add_argument('--cos', action='store_true',
                     help='use cosine lr schedule')
 
-
-def my_loader(path):
-    trans_crop = transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomHorizontalFlip()])
-    trans_img = transforms.Compose([
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-    image = Image.open(path).convert('RGB')
-    two_crop_img = []
-
-    for _ in range(2):
-        image = trans_crop(image)
-        
-
-
-        image, mask = trans_crop(image_PIL, mask_PIL)
-        image = trans_img(image)
-        image, mask = trans_flip(image, mask)
-        image, mask = trans_tensor(image), trans_tensor(mask)
-        mask = (mask[1] > 0.5).float()  # channel 1 of mask is representive
-        image = trans_norm(image) * mask
-        two_crop_img.append(image)
-
-    trans_kf = transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        trans_norm
-    ])
-    trans_kb = transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=1.)
-    image_k = trans_kf(image_PIL)
-    mask_k = trans_kb(torch.zeros(1, 224, 224))[0]
-    image_k = image_k * mask_k
-    two_crop_img.append(image_k)
-
-    return two_crop_img
 
 def main():
     args = parser.parse_args()
@@ -359,8 +309,7 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.RandomApply([moco_loader.GaussianBlur([.1, 2.])], p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        normalize,
-        transforms.RandomErasing(p=1., scale=(0.5, 0.8), ratio=(0.8, 1.25), value=0.)
+        normalize
     ]
 
     train_dataset = datasets.ImageFolder(
@@ -440,12 +389,12 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        mask_idx_q = torch.where(bg0[:, 0, :, :] == 0.)
-        mask_idx_k = torch.where(bg1[:, 0, :, :] == 0.)
-        mask_q = torch.zeros((current_bs, 224, 224))
-        mask_k = torch.zeros((current_bs, 224, 224))
-        mask_q[mask_idx_q[0], mask_idx_q[1], mask_idx_q[2]] = 1.
-        mask_k[mask_idx_k[0], mask_idx_k[1], mask_idx_k[2]] = 1.
+        mask_percent = 0.4
+        masks = torch.rand(current_bs * 2, 196)  # for mask q and k
+        mids = masks.sort()[0][:, int(mask_percent * 256)]
+        masks = (masks.T > mids).T.float().view(2 * current_bs, 14, 14)
+        mask_q = masks[0:current_bs]
+        mask_k = masks[current_bs:]
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
@@ -456,12 +405,15 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
             mask_k = mask_k.cuda(args.gpu, non_blocking=True)
 
         # generate patched images
-        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q]) + bg0
-        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k]) + bg1
+        ups = nn.Upsample(scale_factor=16)
+        mask_q_up = ups(mask_q.unsqueeze(1))
+        mask_k_up = ups(mask_k.unsqueeze(1))
+        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q_up]) + bg0 * (1. - mask_q_up)
+        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k_up]) + bg1 * (1. - mask_k_up)
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
-            image_q, image_k, mask_q[:, 8::16, 8::16], mask_k[:, 8::16, 8::16])
+            image_q, image_k, mask_q, mask_k)
         loss_moco = criterion(output_moco, target_moco)
 
         # dense loss of softmax
