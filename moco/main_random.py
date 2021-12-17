@@ -408,8 +408,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         ups = nn.Upsample(scale_factor=16)
         mask_q_up = ups(mask_q.unsqueeze(1))
         mask_k_up = ups(mask_k.unsqueeze(1))
-        image_q = torch.einsum('bcxy,bxy->bcxy', [images[0], mask_q_up]) + bg0 * (1. - mask_q_up)
-        image_k = torch.einsum('bcxy,bxy->bcxy', [images[1], mask_k_up]) + bg1 * (1. - mask_k_up)
+        image_q = images[0] * mask_q_up + bg0 * (1. - mask_q_up)
+        image_k = images[1] * mask_k_up + bg1 * (1. - mask_k_up)
 
         # compute output
         output_moco, output_dense, target_moco, target_dense, mask_dense = model(
