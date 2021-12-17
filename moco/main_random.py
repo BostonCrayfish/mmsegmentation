@@ -391,8 +391,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         mask_percent = 0.4
         masks = torch.rand(current_bs * 2, 196)  # for mask q and k
-        mids = masks.sort()[0][:, int(mask_percent * 256)]
-        masks = (masks.T > mids).T.float().view(2 * current_bs, 14, 14)
+        mids = masks.sort()[0][:, int(mask_percent * 196)]
+        masks = (masks > mids.unsqueeze(1)).float().view(2 * current_bs, 14, 14)
         mask_q = masks[0:current_bs]
         mask_k = masks[current_bs:]
 
