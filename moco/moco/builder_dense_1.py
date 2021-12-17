@@ -182,9 +182,6 @@ class MoCo(nn.Module):
 
         # moco logits
         l_pos = torch.einsum('nc,nc->n', [q_pos, k_pos]).unsqueeze(-1)
-
-        print(q_pos.shape, self.queue.shape)
-
         l_neg = torch.einsum('nc,ck->nk', [q_pos, self.queue.clone().detach()])
         logits_moco = torch.cat([l_pos, l_neg], dim=1)
         labels_moco = torch.zeros(logits_moco.shape[0], dtype=torch.long).cuda()
