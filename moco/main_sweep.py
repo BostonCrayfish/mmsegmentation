@@ -389,7 +389,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        num_centers = 25
+        num_centers = 35
         sweeper = nn.Conv2d(1, 1, 3, padding=1, bias=False)
         nn.init.constant_(sweeper.weight, 1.)
         masks = torch.rand(current_bs * 2, 196)
