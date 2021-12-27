@@ -179,6 +179,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.head == 'fcn':
         cfg_file = 'config_segco_fcn.py'
+    elif args.head == 'vit_base':
+        cfg_file = 'config_segco_vit_base.py'
     else:
         cfg_file = 'config_segco_aspp.py'
 
