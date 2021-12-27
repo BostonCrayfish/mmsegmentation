@@ -457,7 +457,7 @@ class VisionTransformer(nn.Module):
                     B, _, C = out.shape
                     out = out.reshape(B, inputs.shape[2] // self.patch_size,
                                       inputs.shape[3] // self.patch_size,
-                                      C).permute(0, 3, 1, 2)
+                                      C).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
 
         return tuple(outs)
