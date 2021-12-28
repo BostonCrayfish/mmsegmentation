@@ -322,9 +322,6 @@ class VisionTransformer(nn.Module):
 
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
-
-            print('loading checkpoint')
-
             logger = get_root_logger()
             checkpoint = _load_checkpoint(pretrained, logger=logger)
             if 'state_dict' in checkpoint:
