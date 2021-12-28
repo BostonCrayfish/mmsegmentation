@@ -168,8 +168,7 @@ def main():
         distributed=distributed,
         validate=(not args.no_validate),
         timestamp=timestamp,
-        meta=meta,
-        find_unused_parameters=True)
+        meta=meta)
 
 
 if __name__ == '__main__':
