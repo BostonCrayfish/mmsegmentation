@@ -193,9 +193,6 @@ class MoCo(nn.Module):
         # dequeue and enqueue
         self._dequeue_and_enqueue(k_pos)
 
-        print('grad:', self.encoder_q.backbone.blocks[0].norm1.weight.grad)
-        print('grad_fn:', self.encoder_q.backbone.blocks[0].norm1.weight.grad_fn)
-
         return logits_moco, logits_dense, labels_moco, labels_dense, mask_dense
 
 
