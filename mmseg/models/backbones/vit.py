@@ -10,6 +10,7 @@ import torch.utils.checkpoint as cp
 from mmcv.cnn import (Conv2d, Linear, build_activation_layer, build_norm_layer,
                       constant_init, kaiming_init, normal_init)
 from mmcv.runner import _load_checkpoint
+from mmcv.runner import load_checkpoint
 from mmcv.utils.parrots_wrapper import _BatchNorm
 
 from mmseg.utils import get_root_logger
@@ -344,7 +345,8 @@ class VisionTransformer(nn.Module):
                         state_dict['pos_embed'], (h, w), (pos_size, pos_size),
                         self.patch_size, self.interpolate_mode)
 
-            self.load_state_dict(state_dict, False)
+            # self.load_state_dict(state_dict, False)
+            load_checkpoint(self, pretrained, strict=False, logger=logger)
 
         elif pretrained is None:
             # We only implement the 'jax_impl' initialization implemented at
