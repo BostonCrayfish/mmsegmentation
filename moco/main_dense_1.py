@@ -179,7 +179,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.head == 'fcn':
         cfg_file = 'config_segco_fcn.py'
-    elif args.head == 'vit_base':
+    elif args.arch == 'vit_base':
         cfg_file = 'config_segco_vit_base.py'
     else:
         cfg_file = 'config_segco_aspp.py'
@@ -248,9 +248,13 @@ def main_worker(gpu, ngpus_per_node, args):
     # optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
     #                             momentum=args.momentum,
     #                             weight_decay=args.weight_decay)
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    if args.arch == 'vit_base':
+        optimizer = torch.optim.AdamW(model.parameters(), args.lr,
+                                      weight_decay=0.01)
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                    momentum=args.momentum,
+                                    weight_decay=args.weight_decay)
 
     # optionally resume from a checkpoint
     if args.resume:
