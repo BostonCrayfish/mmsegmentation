@@ -343,7 +343,6 @@ class VisionTransformer(nn.Module):
                         self.patch_size, self.interpolate_mode)
 
             self.load_state_dict(state_dict, False)
-            del checkpoint, state_dict
             # load_checkpoint(self, pretrained, strict=False, logger=logger)
 
         elif pretrained is None:
