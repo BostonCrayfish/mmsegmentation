@@ -28,6 +28,7 @@ from mmcv.utils import Config
 
 from moco.moco import loader as moco_loader
 from moco.moco import builder_dense_1 as moco_builder
+from moco.my_utils import gen_mask
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -389,15 +390,18 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        num_centers = torch.randint(10, 13, [])
-        sweeper = nn.Conv2d(1, 1, 5, padding=2, bias=False)
-        nn.init.constant_(sweeper.weight, 1.)
-        masks = torch.rand(current_bs * 2, 196)
-        mids = masks.sort()[0][:, num_centers]
-        masks = (masks < mids.unsqueeze(1)).float().view(2 * current_bs, 1, 14, 14)
-        with torch.no_grad():
-            mask_q = (sweeper(masks[0: current_bs]) > 0.).float()
-            mask_k = (sweeper(masks[current_bs:]) > 0.).float()
+        # num_centers = torch.randint(10, 13, [])
+        # sweeper = nn.Conv2d(1, 1, 5, padding=2, bias=False)
+        # nn.init.constant_(sweeper.weight, 1.)
+        # masks = torch.rand(current_bs * 2, 196)
+        # mids = masks.sort()[0][:, num_centers]
+        # masks = (masks < mids.unsqueeze(1)).float().view(2 * current_bs, 1, 14, 14)
+        # with torch.no_grad():
+        #     mask_q = (sweeper(masks[0: current_bs]) > 0.).float()
+        #     mask_k = (sweeper(masks[current_bs:]) > 0.).float()
+        masks = gen_mask(current_bs * 2, 14, 4, 8)
+        mask_q = masks[0: current_bs]
+        mask_k = masks[current_bs:]
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
