@@ -399,7 +399,7 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
         # with torch.no_grad():
         #     mask_q = (sweeper(masks[0: current_bs]) > 0.).float()
         #     mask_k = (sweeper(masks[current_bs:]) > 0.).float()
-        masks = gen_mask(current_bs * 2, 14, 4, 8, redundancy=4)
+        masks = gen_mask(current_bs * 2, 14, 4, 8, redundancy=6)
         mask_q = masks[0: current_bs]
         mask_k = masks[current_bs:]
 
