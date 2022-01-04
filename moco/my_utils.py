@@ -26,8 +26,9 @@ def gen_mask(batch, image_size, num_blocks, kernel, ratio=1.25, proportion=(.5, 
     p_masks = mask.mean(dim=(1, 2, 3))
     indices = torch.where(((p_masks < p_max) * (p_masks > p_min)) == 1)[0]
     if len(indices) < batch:
-        raise ValueError('qualified masks are not enough, please check the' +
-                         ' parameters or increase the argument \'redundancy\'')
+        raise ValueError('Qualified masks are not enough, please check the' +
+                         ' parameters or increase the argument \'redundancy\'.' +
+                         'Expected {} masks, got {} only'.format(batch, len(indices)))
     else:
         return mask[indices][0: batch]
 
