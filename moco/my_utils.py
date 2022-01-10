@@ -237,7 +237,7 @@ def my_loader(path):
         id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
         mask = torch.zeros(224 * 224)
         mask[id_pos == 1] = 1.
-        image_two_crops.append(img * mask)
+        image_two_crops.append(img * mask.view(224, 224))
     return image_two_crops
 
 if __name__ == '__main__':
