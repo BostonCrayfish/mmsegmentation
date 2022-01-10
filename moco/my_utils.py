@@ -204,16 +204,24 @@ def _inpoly(vert, node, edge, ftol, lbar):
 
 def random_shape(image_size, k, r_min=None, epsilon=1e-10):
     if not r_min:
-        r_min = image_size * 0.3
+        r_min = image_size * 0.25
     r_img = image_size / 2. + .5
-    locs = []
-    for i in range(k):
-        theta = i * 2 * np.pi / k
-        r_theta = min(np.abs(r_img / (np.sin(theta) + epsilon)),
-                      np.abs(r_img / (np.cos(theta) + epsilon)))
-        r = np.random.rand() * (r_theta - r_min) + r_min
-        loc = [int(r * np.cos(theta)), int(r * np.sin(theta))]
-        locs.append(loc)
+
+    theta = np.linspace(0, 2 * np.pi, k + 1)[0: -1]
+    r_theta = np.min([
+        np.abs(r_img / (np.sin(theta) + epsilon)),
+        np.abs(r_img / (np.cos(theta) + epsilon))
+    ], axis=0)
+    r = np.random.rand(k) * (r_theta - r_min) + r_min
+    locs = [(r * np.cos(theta)).astype(np.int32), (r * np.sin(theta)).astype(np.int32)]
+    # locs = []
+    # for i in range(k):
+    #     theta = i * 2 * np.pi / k
+    #     r_theta = min(np.abs(r_img / (np.sin(theta) + epsilon)),
+    #                   np.abs(r_img / (np.cos(theta) + epsilon)))
+    #     r = np.random.rand() * (r_theta - r_min) + r_min
+    #     loc = [int(r * np.cos(theta)), int(r * np.sin(theta))]
+    #     locs.append(loc)
     return np.asarray(locs) + r_img
 
 def my_loader(path):
