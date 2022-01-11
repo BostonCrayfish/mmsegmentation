@@ -248,15 +248,27 @@ def my_loader(path):
     return image_two_crops
 
 if __name__ == '__main__':
-    nodes = random_shape(224, 10)
-    id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
-    mask = torch.zeros(224 * 224)
-    mask[id_pos == 1] = 1.
-    import matplotlib.pyplot as plt
+    mask_total = []
+    import time
+    start = time.time()
+    for i in range(8192):
+        nodes = random_shape(224, 10)
+        id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
+        mask = torch.zeros(224 * 224, dtype=torch.bool)
+        mask[id_pos == 1] = True
+        mask_total.append(mask.view(1, 224, 224))
+        if i % 128 == 127:
+            end = time.time()
+            print('128 masks done in {} seconds'.format(end - start))
+            start = time.time()
+    mask_total = torch.cat(mask_total)
+    torch.save(mask_total, './masks.pth')
 
 
-    plt.imshow(mask.view(224, 224).numpy())
-    plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
-    plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
-    plt.show()
-    print(mask.mean())
+
+    # import matplotlib.pyplot as plt
+    # plt.imshow(mask.view(224, 224).numpy())
+    # plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
+    # plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
+    # plt.show()
+    # print(mask.mean())
