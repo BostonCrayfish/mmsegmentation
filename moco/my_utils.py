@@ -100,7 +100,6 @@ def inpoly2(vert, node, ftol=5.0e-14):
 
     return STAT, BNDS
 
-
 def _inpoly(vert, node, edge, ftol, lbar):
     """
     _INPOLY: the local pycode version of the crossing-number
@@ -147,17 +146,17 @@ def _inpoly(vert, node, edge, ftol, lbar):
     # ----------------------------------- loop over polygon edges
     for epos in range(edge.shape[0]):
 
-        xone = XONE[epos];
+        xone = XONE[epos]
         xtwo = XTWO[epos]
-        yone = YONE[epos];
+        yone = YONE[epos]
         ytwo = YTWO[epos]
 
-        xmin = XMIN[epos];
+        xmin = XMIN[epos]
         xmax = XMAX[epos]
 
         edel = EDEL[epos]
 
-        xdel = XDEL[epos];
+        xdel = XDEL[epos]
         ydel = YDEL[epos]
 
         # ------------------------------- calc. edge-intersection
@@ -204,7 +203,7 @@ def _inpoly(vert, node, edge, ftol, lbar):
 
 def random_shape(image_size, k, r_min=None, epsilon=1e-10):
     if not r_min:
-        r_min = image_size * 0.25
+        r_min = image_size * 0.3
     r_img = image_size / 2. + .5
 
     theta = np.linspace(0, 2 * np.pi, k + 1)[0: -1]
@@ -222,7 +221,7 @@ def random_shape(image_size, k, r_min=None, epsilon=1e-10):
     #     r = np.random.rand() * (r_theta - r_min) + r_min
     #     loc = [int(r * np.cos(theta)), int(r * np.sin(theta))]
     #     locs.append(loc)
-    return np.asarray(locs) + r_img
+    return np.asarray(locs).T + r_img
 
 def my_loader(path):
     aug = transforms.Compose([
@@ -241,7 +240,7 @@ def my_loader(path):
     image_two_crops = []
     for _ in range(2):
         img = aug(image)
-        nodes = random_shape(224, 20)
+        nodes = random_shape(224, 10)
         id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
         mask = torch.zeros(224 * 224)
         mask[id_pos == 1] = 1.
@@ -249,4 +248,15 @@ def my_loader(path):
     return image_two_crops
 
 if __name__ == '__main__':
-    mask = gen_mask(2, 14, 3, 9)
+    nodes = random_shape(224, 10)
+    id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
+    mask = torch.zeros(224 * 224)
+    mask[id_pos == 1] = 1.
+    import matplotlib.pyplot as plt
+
+
+    plt.imshow(mask.view(224, 224).numpy())
+    plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
+    plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
+    plt.show()
+    print(mask.mean())
