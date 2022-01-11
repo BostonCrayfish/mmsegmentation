@@ -384,8 +384,8 @@ def train(train_loader_list, model, criterion, optimizer, epoch, args):
 
         current_bs = images[0].size(0)
 
-        mask_q = mask_total[torch.randint(0, 8192, [current_bs])]
-        mask_k = mask_total[torch.randint(0, 8192, [current_bs])]
+        mask_q = mask_total[torch.randint(0, 8192, [current_bs])].float()
+        mask_k = mask_total[torch.randint(0, 8192, [current_bs])].float()
 
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
