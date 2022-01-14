@@ -205,7 +205,7 @@ def _inpoly(vert, node, edge, ftol, lbar):
 
 def random_shape(image_size, k, r_min=None, epsilon=1e-10):
     if not r_min:
-        r_min = image_size * 0.3
+        r_min = image_size * 0.36
     r_img = image_size / 2. + .5
 
     theta = np.linspace(0, 2 * np.pi, k + 1)[0: -1]
@@ -373,32 +373,25 @@ def loader_non_random(path):
     return two_crop_img
 
 if __name__ == '__main__':
-
-    path = '/home/cwei/feng/data/ImageNet/train/n01440764/n01440764_8580.JPEG'
-    images = loader_non_random(path)
-    print((images[0] == 0.).mean())
-
-
-    # mask_total = []
-    # import time
-    # start = time.time()
-    # for i in range(8192):
-    #     nodes = random_shape(224, 10)
-    #     id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
-    #     mask = torch.zeros(224 * 224, dtype=torch.bool)
-    #     mask[id_pos == 1] = True
-    #     mask_total.append(mask.view(1, 224, 224))
-    #     if i % 128 == 127:
-    #         end = time.time()
-    #         print('128 masks done in {} seconds'.format(end - start))
-    #         start = time.time()
-    # mask_total = torch.cat(mask_total)
-    # torch.save(mask_total, './masks.pth')
-
-
+    mask_total = []
+    import time
+    start = time.time()
+    for i in range(8192):
+        nodes = random_shape(224, 15)
+        id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
+        mask = torch.zeros(224 * 224, dtype=torch.bool)
+        mask[id_pos == 1] = True
+        mask_total.append(mask.view(1, 224, 224))
+        if i % 128 == 127:
+            end = time.time()
+            print('128 masks done in {} seconds'.format(end - start))
+            start = time.time()
+    mask_total = torch.cat(mask_total)
+    print(mask_total.float().mean())
+    torch.save(mask_total, './masks.pth')
 
     # import matplotlib.pyplot as plt
-    # plt.imshow(mask.view(224, 224).numpy())
+    # plt.imshow(mask_total[0].numpy())
     # plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
     # plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
     # plt.show()
