@@ -373,21 +373,26 @@ def loader_non_random(path):
     return two_crop_img
 
 if __name__ == '__main__':
-    mask_total = []
-    import time
-    start = time.time()
-    for i in range(8192):
-        nodes = random_shape(224, 10)
-        id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
-        mask = torch.zeros(224 * 224, dtype=torch.bool)
-        mask[id_pos == 1] = True
-        mask_total.append(mask.view(1, 224, 224))
-        if i % 128 == 127:
-            end = time.time()
-            print('128 masks done in {} seconds'.format(end - start))
-            start = time.time()
-    mask_total = torch.cat(mask_total)
-    torch.save(mask_total, './masks.pth')
+
+    path = '/home/cwei/feng/data/ImageNet/train/n01440764/n01440764_8580.JPEG'
+    print(loader_non_random(path))
+
+
+    # mask_total = []
+    # import time
+    # start = time.time()
+    # for i in range(8192):
+    #     nodes = random_shape(224, 10)
+    #     id_pos, _ = inpoly2(np.asarray(np.meshgrid(np.arange(224), np.arange(224))).reshape(2, -1).T, nodes)
+    #     mask = torch.zeros(224 * 224, dtype=torch.bool)
+    #     mask[id_pos == 1] = True
+    #     mask_total.append(mask.view(1, 224, 224))
+    #     if i % 128 == 127:
+    #         end = time.time()
+    #         print('128 masks done in {} seconds'.format(end - start))
+    #         start = time.time()
+    # mask_total = torch.cat(mask_total)
+    # torch.save(mask_total, './masks.pth')
 
 
 
