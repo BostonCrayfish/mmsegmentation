@@ -1,9 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 from PIL import ImageFilter
 import random
-import torch
-import torchvision.transforms.functional as F
-import math
 
 class TwoCropsTransform:
     """Take two random crops of one image as the query and key."""
@@ -28,72 +25,9 @@ class GaussianBlur(object):
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
 
-class Crop_with_mask(torch.nn.Module):
-    def __init__(self, size=224, scale=(0.2, 1), ratio=(0.75, 1.33333333)):
-        super().__init__()
-        self.size = (size, size)
-        self.scale = scale
-        self.ratio = ratio
 
-    def get_params(self, img, scale=(0.08, 1.), ratio=(0.75, 1.333)):
-        """Get parameters for ``crop`` for a random sized crop.
 
-        Args:
-            img (PIL Image or Tensor): Input image.
-            scale (list): range of scale of the origin size cropped
-            ratio (list): range of aspect ratio of the origin aspect ratio cropped
 
-        Returns:
-            tuple: params (i, j, h, w) to be passed to ``crop`` for a random
-            sized crop.
-        """
-
-        width, height = img.size
-        area = height * width
-
-        log_ratio = torch.log(torch.tensor(ratio))
-        for _ in range(10):
-            target_area = area * torch.empty(1).uniform_(scale[0], scale[1]).item()
-            aspect_ratio = torch.exp(
-                torch.empty(1).uniform_(log_ratio[0], log_ratio[1])
-            ).item()
-
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
-
-            if 0 < w <= width and 0 < h <= height:
-                i = torch.randint(0, height - h + 1, size=(1,)).item()
-                j = torch.randint(0, width - w + 1, size=(1,)).item()
-                return i, j, h, w
-
-        # Fallback to central crop
-        in_ratio = float(width) / float(height)
-        if in_ratio < min(ratio):
-            w = width
-            h = int(round(w / min(ratio)))
-        elif in_ratio > max(ratio):
-            h = height
-            w = int(round(h * max(ratio)))
-        else:  # whole image
-            w = width
-            h = height
-        i = (height - h) // 2
-        j = (width - w) // 2
-        return i, j, h, w
-
-    def forward(self, img, mask):
-        i, j, h, w = self.get_params(img, self.scale, self.ratio)
-        return F.resized_crop(img, i, j, h, w, self.size), F.resized_crop(mask, i, j, h, w, self.size)
-
-class Flip_with_mask(torch.nn.Module):
-    def __init__(self, p=0.5):
-        super().__init__()
-        self.p = p
-
-    def forward(self, img, mask):
-        if torch.rand(1) < self.p:
-            return F.hflip(img), F.hflip(mask)
-        return img, mask
 
 # class FixCrop(torch.nn.Module):
 #     def __init__(self, size=224, seed=0, seed_length=8192, scale=(0.2, 1), ratio=(0.75, 1.33333333)):
