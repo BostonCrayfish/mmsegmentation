@@ -375,7 +375,8 @@ def loader_non_random(path):
 if __name__ == '__main__':
 
     path = '/home/cwei/feng/data/ImageNet/train/n01440764/n01440764_8580.JPEG'
-    print(loader_non_random(path))
+    images = loader_non_random(path)
+    print((images[0] == 0.).mean())
 
 
     # mask_total = []
