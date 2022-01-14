@@ -337,12 +337,12 @@ def loader_non_random(path):
 
     # two dino masks
     for _ in range(2):
-        image, mask = trans_crop(image, image)
-        image = trans_img(image)
-        image, mask = trans_flip(image, mask)
-        image, mask = trans_tensor(image), trans_tensor(mask)
-        image = trans_norm(image) * mask
-        two_crop_img.append(image)
+        img, m = trans_crop(image, mask)
+        img = trans_img(img)
+        img, m = trans_flip(img, m)
+        img, m = trans_tensor(img), trans_tensor(m)
+        img = trans_norm(img) * m
+        two_crop_img.append(img)
 
     # one dino mask and one random rectangle
     # image_q, mask_q = trans_crop(image_PIL, mask_PIL)
