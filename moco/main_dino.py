@@ -52,8 +52,8 @@ parser.add_argument('--data', metavar='DIR',
                     default='/export/ccvl11b/cwei/data/ImageNet',
                     help='path to dataset')
 parser.add_argument('--device-name', default='ccvl11', help='device name')
+parser.add_argument('--head', default='aspp', help='decoder head')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
-                    choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet50)')
