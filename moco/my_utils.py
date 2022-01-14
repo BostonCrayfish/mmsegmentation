@@ -337,7 +337,7 @@ def loader_non_random(path):
 
     # two dino masks
     for _ in range(2):
-        image, mask = trans_crop(image, mask)
+        image, mask = trans_crop(image, image)
         image = trans_img(image)
         image, mask = trans_flip(image, mask)
         image, mask = trans_tensor(image), trans_tensor(mask)
