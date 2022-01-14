@@ -28,7 +28,7 @@ from mmcv.utils import Config
 from PIL import Image
 
 from moco.moco import loader as moco_loader
-from moco.moco import builder_dense_2 as moco_builder
+from moco.moco import builder_dense_1 as moco_builder
 from moco.my_utils import loader_non_random
 
 from torch.utils.tensorboard import SummaryWriter
