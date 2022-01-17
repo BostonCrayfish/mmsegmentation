@@ -390,9 +390,9 @@ if __name__ == '__main__':
     print(mask_total.float().mean())
     torch.save(mask_total, './masks.pth')
 
-    # import matplotlib.pyplot as plt
-    # plt.imshow(mask_total[0].numpy())
-    # plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
-    # plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
-    # plt.show()
+    import matplotlib.pyplot as plt
+    plt.imshow(mask_total[0].numpy())
+    plt.plot(nodes[:, 0], nodes[:, 1], 'b', linewidth=5)
+    plt.plot([nodes[-1, 0], nodes[0, 0]], [nodes[-1, 1], nodes[0, 1]], 'b', linewidth=5)
+    plt.show()
     # print(mask.mean())
