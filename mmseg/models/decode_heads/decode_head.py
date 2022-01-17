@@ -139,8 +139,8 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         if isinstance(pretrained, str):
             logger = get_root_logger()
             load_checkpoint(self, pretrained, strict=False, logger=logger)
-        normal_init(self.conv_seg, mean=0, std=0.01)
-        # constant_init(self.conv_seg, 0)
+        # normal_init(self.conv_seg, mean=0, std=0.01)
+        constant_init(self.conv_seg, 0)
 
     def _transform_inputs(self, inputs):
         """Transform inputs for decoder.
