@@ -120,7 +120,7 @@ class ConvProjector(nn.Module):
 # and pipe it into the projecter and predictor nets
 
 class NetWrapper(nn.Module):
-    def __init__(self, net, projection_size, projection_hidden_size, layer=-1):
+    def __init__(self, net, projection_size, projection_hidden_size, layer=-2):
         super().__init__()
         self.net = net
         self.layer = layer
@@ -189,7 +189,7 @@ class BYOL(nn.Module):
         self,
         net,
         image_size=224,
-        hidden_layer=-1,
+        hidden_layer=-2,
         projection_size=256,
         projection_hidden_size=1024,
         moving_average_decay=0.9995,
