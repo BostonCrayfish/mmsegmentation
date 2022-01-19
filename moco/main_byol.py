@@ -248,8 +248,8 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     if args.fix_pred_lr:
-        optim_params = [{'params': model.module.encoder.parameters(), 'fix_lr': False},
-                        {'params': model.module.predictor.parameters(), 'fix_lr': True}]
+        optim_params = [{'params': model.module.net.encoder.parameters(), 'fix_lr': False},
+                        {'params': model.module.net.predictor.parameters(), 'fix_lr': True}]
     else:
         optim_params = model.parameters()
 
