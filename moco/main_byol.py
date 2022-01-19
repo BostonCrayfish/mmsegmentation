@@ -185,7 +185,7 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.arch == 'vit_base':
         cfg_file = 'config_segco_vit_base.py'
     else:
-        cfg_file = 'config_segco_aspp.py'
+        cfg_file = 'config_segco_byol.py'
 
     cfg = Config.fromfile(config_dir + cfg_file)
     args.gpu = gpu
