@@ -342,8 +342,8 @@ class VisionTransformer(nn.Module):
                         state_dict['pos_embed'], (h, w), (pos_size, pos_size),
                         self.patch_size, self.interpolate_mode)
 
-            self.load_state_dict(state_dict, False)
-            # load_checkpoint(self, pretrained, strict=False, logger=logger)
+            # self.load_state_dict(state_dict, False)
+            load_checkpoint(self, pretrained, strict=False, logger=logger)
 
         elif pretrained is None:
             # We only implement the 'jax_impl' initialization implemented at
