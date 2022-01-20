@@ -96,6 +96,7 @@ class ASPPHead(BaseDecodeHead):
                 nn.ReLU(),
                 nn.Conv2d(self.channels, 128, 1))
 
+
     def forward(self, inputs):
         """Forward function."""
         x = self._transform_inputs(inputs)
@@ -109,8 +110,8 @@ class ASPPHead(BaseDecodeHead):
         aspp_outs.extend(self.aspp_modules(x))
         aspp_outs = torch.cat(aspp_outs, dim=1)
         output = self.bottleneck(aspp_outs)
-        if self.contrast:
-            output = self.contrast_conv(output)
-        else:
-            output = self.cls_seg(output)
+        # if self.contrast:
+        #     output = self.contrast_conv(output)
+        # else:
+        #     output = self.cls_seg(output)
         return output
