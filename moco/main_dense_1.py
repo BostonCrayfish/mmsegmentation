@@ -178,8 +178,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.head == 'fcn':
         cfg_file = 'config_segco_fcn.py'
-    elif args.arch == 'vit_base':
-        cfg_file = 'config_segco_vit_base.py'
+    elif args.arch.startswith('vit'):
+        cfg_file = 'config_segco_' + args.arch + '.py'
     else:
         cfg_file = 'config_segco_aspp.py'
 
@@ -247,7 +247,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # optimizer = torch.optim.SGD(model.module.encoder_q.decode_head.parameters(), args.lr,
     #                             momentum=args.momentum,
     #                             weight_decay=args.weight_decay)
-    if args.arch == 'vit_base':
+    if args.arch.startswith('vit'):
         optimizer = torch.optim.AdamW(model.parameters(), args.lr,
                                       weight_decay=0.01)
     else:
