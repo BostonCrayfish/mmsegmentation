@@ -180,6 +180,10 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.head == 'fcn':
         cfg_file = 'config_segco_fcn.py'
+    elif args.arch.startswith('vit'):
+        cfg_file = 'config_segco_' + args.arch + '.py'
+    elif args.arch == 'resnet50v1c':
+        cfg_file = 'config_segco_r50v1c.py'
     else:
         cfg_file = 'config_segco_aspp.py'
 
