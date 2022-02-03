@@ -251,7 +251,7 @@ def main_worker(gpu, ngpus_per_node, args):
     #                             weight_decay=args.weight_decay)
     if args.arch.startswith('vit'):
         optimizer = torch.optim.AdamW(model.parameters(), args.lr,
-                                      weight_decay=0.01)
+                                      weight_decay=0.)
     else:
         optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                     momentum=args.momentum,
