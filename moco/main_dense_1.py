@@ -51,6 +51,7 @@ parser.add_argument('--data', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('--device-name', default='ccvl11', help='device name')
 parser.add_argument('--head', default='aspp', help='decoder head')
+parser.add_argument('--config', default='config_segco_aspp.py', help='config file')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
@@ -176,14 +177,15 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         raise ValueError("missing data directory or unknown device")
 
-    if args.head == 'fcn':
-        cfg_file = 'config_segco_fcn.py'
-    elif args.arch.startswith('vit'):
-        cfg_file = 'config_segco_' + args.arch + '.py'
-    elif args.arch == 'resnet50v1c':
-        cfg_file = 'config_segco_r50v1c.py'
-    else:
-        cfg_file = 'config_segco_aspp.py'
+    # if args.head == 'fcn':
+    #     cfg_file = 'config_segco_fcn.py'
+    # elif args.arch.startswith('vit'):
+    #     cfg_file = 'config_segco_' + args.arch + '.py'
+    # elif args.arch == 'resnet50v1c':
+    #     cfg_file = 'config_segco_r50v1c.py'
+    # else:
+    #     cfg_file = 'config_segco_aspp.py'
+    cfg_file = args.config
 
     cfg = Config.fromfile(config_dir + cfg_file)
     args.gpu = gpu
