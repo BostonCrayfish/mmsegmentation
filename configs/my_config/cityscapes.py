@@ -1,11 +1,10 @@
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 
-# pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/moco_r50_800ep_trans.pth'
-pretrain_path = '/home/feng/work_mmseg/checkpoints/sss/sss_1111.pth'
-# pretrain_path = 'open-mmlab://resnet50_v1c'
-# pretrain_path = '/home/feng/work_mmseg/checkpoints/moco/InfoMin_800ep_trans.pth'
-data_root = '/home/feng/data/cityscapes'
+pretrain_path = '/home/cwei/feng/work_place/checkpoints/moco_r50_800ep_trans.pth'
+data_root = '/home/cwei/feng/data/cityscapes'
+lr = 0.01
+wd = 5e-4
 
 channels = 512
 model = dict(
@@ -109,7 +108,7 @@ workflow = [('train', 1)]
 cudnn_benchmark = True
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005)
+optimizer = dict(type='SGD', lr=lr, momentum=0.9, weight_decay=wd)
 optimizer_config = dict()
 # learning policy
 lr_config = dict(policy='poly', power=0.9, min_lr=1e-4, by_epoch=False)
